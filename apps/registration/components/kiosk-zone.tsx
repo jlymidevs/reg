@@ -39,6 +39,12 @@ export function KioskZone({ events }: { events: ChurchEvent[] }) {
     });
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (resetTimer.current) clearTimeout(resetTimer.current);
+    };
+  }, []);
+
   const showFlash = useCallback((f: Flash) => {
     if (resetTimer.current) clearTimeout(resetTimer.current);
     setFlash(f);
@@ -94,13 +100,19 @@ export function KioskZone({ events }: { events: ChurchEvent[] }) {
     <section className="mt-10 rounded-2xl border bg-white p-4 shadow-sm">
       <div className="mb-4 flex gap-2">
         <button
-          onClick={() => setTab('checkin')}
+          onClick={() => {
+            lastScanned.current = { code: '', at: 0 };
+            setTab('checkin');
+          }}
           className={`flex-1 rounded-lg px-4 py-3 font-semibold ${tab === 'checkin' ? 'bg-violet-700 text-white' : 'bg-gray-100'}`}
         >
           Check-in
         </button>
         <button
-          onClick={() => setTab('register')}
+          onClick={() => {
+            lastScanned.current = { code: '', at: 0 };
+            setTab('register');
+          }}
           className={`flex-1 rounded-lg px-4 py-3 font-semibold ${tab === 'register' ? 'bg-[#1F8A8B] text-white' : 'bg-gray-100'}`}
         >
           Register
