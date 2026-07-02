@@ -42,6 +42,7 @@ export interface ChurchEvent {
   network_id: string | null;
   ministry_id: string | null;
   requirement_id: string | null;
+  image_url?: string | null;
 }
 
 export interface AttendanceLog {
