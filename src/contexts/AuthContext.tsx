@@ -8,6 +8,7 @@ interface AuthContextType {
   loading: boolean;
   authError: string;
   signIn: (email: string, password: string) => Promise<{ ok: boolean; message?: string }>;
+  signInWithGoogle: () => Promise<{ ok: boolean; message?: string }>;
   signOut: () => Promise<void>;
 }
 
@@ -17,6 +18,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   authError: '',
   signIn: async () => ({ ok: false }),
+  signInWithGoogle: async () => ({ ok: false }),
   signOut: async () => {},
 });
 
@@ -104,6 +106,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { ok: true };
   };
 
+  const signInWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/admin` },
+    });
+    if (error) return { ok: false, message: error.message };
+    // Browser redirects to Google; admin check happens on return via onAuthStateChange
+    return { ok: true };
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
     setUser(null);
@@ -112,7 +124,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAdmin, loading, authError, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, isAdmin, loading, authError, signIn, signInWithGoogle, signOut }}>
       {children}
     </AuthContext.Provider>
   );
