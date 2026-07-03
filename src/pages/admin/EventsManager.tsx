@@ -20,6 +20,18 @@ function newField(): CustomFormField {
   return { id: `f_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`, type: 'text', label: '', required: false };
 }
 
+// The public registration form already collects these — a custom field
+// with a colliding label renders as a confusing duplicate for attendees.
+const STANDARD_FIELD_LABELS = [
+  'first name', 'last name', 'surname', 'city address', 'address',
+  'phone number', 'phone', 'mobile number', 'mobile', 'email', 'birth date', 'date of birth',
+];
+
+function collidesWithStandardField(label: string): boolean {
+  const normalized = label.trim().toLowerCase();
+  return normalized.length > 0 && STANDARD_FIELD_LABELS.includes(normalized);
+}
+
 export default function EventsManager() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -134,11 +146,18 @@ export default function EventsManager() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true);
     setErrorMsg('');
 
+    const cleanFields = customFields.filter((f) => f.label.trim() !== '');
+    const colliding = cleanFields.filter((f) => collidesWithStandardField(f.label));
+    if (colliding.length > 0) {
+      setErrorMsg(`Remove or rename these custom fields — the registration form already asks for them: ${colliding.map((f) => f.label).join(', ')}`);
+      return;
+    }
+
+    setSaving(true);
+
     try {
-      const cleanFields = customFields.filter((f) => f.label.trim() !== '');
       const payload = {
         ...formData,
         starts_at: new Date(formData.starts_at).toISOString(),
@@ -438,13 +457,20 @@ export default function EventsManager() {
                         <div className="flex items-start gap-3">
                           <GripVertical size={16} className="text-muted mt-3 shrink-0" />
                           <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <input
-                              type="text"
-                              placeholder="Field label (e.g. T-shirt size)"
-                              className="input text-sm"
-                              value={field.label}
-                              onChange={(e) => updateField(field.id, { label: e.target.value })}
-                            />
+                            <div>
+                              <input
+                                type="text"
+                                placeholder="Field label (e.g. T-shirt size)"
+                                className="input text-sm"
+                                value={field.label}
+                                onChange={(e) => updateField(field.id, { label: e.target.value })}
+                              />
+                              {collidesWithStandardField(field.label) && (
+                                <p className="text-xs text-accent mt-1">
+                                  The registration form already asks for this — attendees would see it twice.
+                                </p>
+                              )}
+                            </div>
                             <select
                               className="input text-sm"
                               value={field.type}

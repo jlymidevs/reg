@@ -285,67 +285,80 @@ export default function Home() {
                     </div>
                   )}
                   
-                  <form onSubmit={handleSubmit} className="space-y-5">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                      <div className="form-group mb-0">
-                        <label className="label" htmlFor="first_name">First Name *</label>
-                        <input 
-                          id="first_name"
-                          type="text" 
-                          required
-                          className="input" 
-                          placeholder="John"
-                          value={formData.first_name}
-                          onChange={(e) => setFormData({...formData, first_name: e.target.value})}
-                        />
+                  <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="space-y-4">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-muted">Personal Information</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div className="form-group mb-0">
+                          <label className="label" htmlFor="first_name">First Name *</label>
+                          <input
+                            id="first_name"
+                            type="text"
+                            required
+                            className="input"
+                            placeholder="John"
+                            value={formData.first_name}
+                            onChange={(e) => setFormData({...formData, first_name: e.target.value})}
+                          />
+                        </div>
+                        <div className="form-group mb-0">
+                          <label className="label" htmlFor="surname">Last Name *</label>
+                          <input
+                            id="surname"
+                            type="text"
+                            required
+                            className="input"
+                            placeholder="Doe"
+                            value={formData.surname}
+                            onChange={(e) => setFormData({...formData, surname: e.target.value})}
+                          />
+                        </div>
                       </div>
+                    </div>
+
+                    <div className="space-y-4 pt-2 border-t border-border">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-muted pt-4">Contact Information</h4>
                       <div className="form-group mb-0">
-                        <label className="label" htmlFor="surname">Last Name *</label>
+                        <label className="label" htmlFor="phone">Phone Number *</label>
                         <input
-                          id="surname"
-                          type="text"
+                          id="phone"
+                          type="tel"
                           required
+                          pattern="^\+639\d{9}$"
+                          title="Must be in format +639XXXXXXXXX"
                           className="input"
-                          placeholder="Doe"
-                          value={formData.surname}
-                          onChange={(e) => setFormData({...formData, surname: e.target.value})}
+                          placeholder="+639171234567"
+                          value={formData.phone}
+                          onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                        />
+                        <p className="text-xs text-muted mt-1">Format: +639171234567</p>
+                      </div>
+
+                      <div className="form-group mb-0">
+                        <label className="label" htmlFor="email">Email <span className="text-muted font-normal">(optional — get a confirmation email)</span></label>
+                        <input
+                          id="email"
+                          type="email"
+                          className="input"
+                          placeholder="you@example.com"
+                          autoComplete="email"
+                          value={formData.email}
+                          onChange={(e) => setFormData({...formData, email: e.target.value})}
                         />
                       </div>
                     </div>
-                    
-                    <div className="form-group mb-0">
-                      <label className="label" htmlFor="address">City Address *</label><input id="address" type="text" required className="input" placeholder="e.g. Quezon City" value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} />
-                    </div>
-                    
-                    <div className="form-group mb-0">
-                      <label className="label" htmlFor="phone">Phone Number *</label>
-                      <input 
-                        id="phone"
-                        type="tel" 
-                        required
-                        pattern="^\+639\d{9}$"
-                        title="Must be in format +639XXXXXXXXX"
-                        className="input" 
-                        placeholder="+639171234567"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                      />
-                      <p className="text-xs text-muted mt-1">Format: +639171234567</p>
+
+                    <div className="space-y-4 pt-2 border-t border-border">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-muted pt-4">Location</h4>
+                      <div className="form-group mb-0">
+                        <label className="label" htmlFor="address">City Address *</label>
+                        <input id="address" type="text" required className="input" placeholder="e.g. Quezon City" value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} />
+                      </div>
                     </div>
 
-                    <div className="form-group mb-0">
-                      <label className="label" htmlFor="email">Email <span className="text-muted font-normal">(optional — get a confirmation email)</span></label>
-                      <input
-                        id="email"
-                        type="email"
-                        className="input"
-                        placeholder="you@example.com"
-                        autoComplete="email"
-                        value={formData.email}
-                        onChange={(e) => setFormData({...formData, email: e.target.value})}
-                      />
-                    </div>
-
+                    {getEventFormFields(selectedEvent).length > 0 && (
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-muted pt-2 border-t border-border pt-4">Additional Questions</h4>
+                    )}
                     {getEventFormFields(selectedEvent).map((field) => (
                       <div key={field.id} className="form-group mb-0">
                         <label className="label" htmlFor={field.id}>
