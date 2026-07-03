@@ -227,6 +227,7 @@ export interface Database {
           created_at: string
           updated_at: string | null
           form_fields: Json
+          archived_at: string | null
         }
         Insert: {
           id?: string
@@ -245,6 +246,7 @@ export interface Database {
           created_at?: string
           updated_at?: string | null
           form_fields?: Json
+          archived_at?: string | null
         }
         Update: {
           id?: string
@@ -261,6 +263,7 @@ export interface Database {
           is_active?: boolean
           created_by?: string | null
           created_at?: string
+          archived_at?: string | null
           updated_at?: string | null
           form_fields?: Json
         }

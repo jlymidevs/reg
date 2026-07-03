@@ -44,6 +44,7 @@ export async function getActiveEvents() {
     .select('*')
     .eq('is_active', true)
     .eq('is_published', true)
+    .is('archived_at', null)
     .gt('ends_at', new Date().toISOString())
     .order('starts_at', { ascending: true });
 
@@ -86,11 +87,10 @@ export async function registerForEvent(input: RegistrationInput): Promise<{ emai
 
 // --- ADMIN API (requires authenticated admin session) ---
 
-export async function getAllEvents() {
-  const { data, error } = await supabase
-    .from('events')
-    .select('*')
-    .order('starts_at', { ascending: false });
+export async function getAllEvents(includeArchived = false) {
+  let query = supabase.from('events').select('*').order('starts_at', { ascending: false });
+  if (!includeArchived) query = query.is('archived_at', null);
+  const { data, error } = await query;
 
   if (error) throw error;
   return data;
@@ -104,6 +104,12 @@ export async function createEvent(event: Database['public']['Tables']['events'][
 
 export async function updateEvent(id: string, updates: Database['public']['Tables']['events']['Update']) {
   const { error } = await supabase.from('events').update(updates).eq('id', id);
+  if (error) throw error;
+  return true;
+}
+
+export async function archiveEvent(id: string) {
+  const { error } = await supabase.from('events').update({ archived_at: new Date().toISOString(), is_active: false }).eq('id', id);
   if (error) throw error;
   return true;
 }

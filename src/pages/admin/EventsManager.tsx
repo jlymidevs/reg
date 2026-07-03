@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getAllEvents, createEvent, updateEvent, getEventFormFields } from '../../lib/api';
+import { getAllEvents, createEvent, updateEvent, archiveEvent, getEventFormFields } from '../../lib/api';
 import type { Event, CustomFormField, FormFieldType } from '../../lib/api';
 import { Plus, Edit2, CheckCircle2, XCircle, Calendar as CalendarIcon, Clock, Users, MapPin, GripVertical, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
 import { format } from 'date-fns';
@@ -192,6 +192,17 @@ export default function EventsManager() {
     }
   };
 
+  const handleArchive = async (event: Event) => {
+    if (!confirm(`Archive "${event.title}"? It will be hidden from lists but not deleted — registrations and history are kept.`)) return;
+    try {
+      await archiveEvent(event.id);
+      await fetchEvents();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to archive event');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -261,13 +272,22 @@ export default function EventsManager() {
                       </button>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button 
-                        onClick={() => handleOpenModal(event)}
-                        className="p-2 text-text-muted hover:text-primary hover:bg-secondary/50 rounded-lg transition-colors"
-                        title="Edit Event"
-                      >
-                        <Edit2 size={16} />
-                      </button>
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={() => handleOpenModal(event)}
+                          className="p-2 text-text-muted hover:text-primary hover:bg-secondary/50 rounded-lg transition-colors"
+                          title="Edit Event"
+                        >
+                          <Edit2 size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleArchive(event)}
+                          className="p-2 text-text-muted hover:text-error hover:bg-error/10 rounded-lg transition-colors"
+                          title="Archive Event"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
