@@ -77,8 +77,8 @@ begin
   limit 1;
 
   if v_member_id is null then
-    insert into members (first_name, surname, phone, address, email)
-    values (trim(p_first_name), trim(p_surname), p_phone, nullif(trim(p_address), ''), v_email)
+    insert into members (first_name, surname, name, phone, address, email)
+    values (trim(p_first_name), trim(p_surname), trim(p_first_name) || ' ' || trim(p_surname), p_phone, nullif(trim(p_address), ''), v_email)
     returning id into v_member_id;
   elsif v_email is not null then
     -- Backfill email for returning members who didn't provide one before
