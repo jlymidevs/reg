@@ -1,40 +1,40 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
 /* Map the design tokens into Tailwind's theme so utilities like
    bg-primary, text-muted, border-border, bg-background resolve. */
 @theme {
-  --color-primary: #1A365D;
-  --color-primary-light: #2B6CB0;
-  --color-secondary: #00B5D8;
-  --color-accent: #D69E2E;
-  --color-background: #F7FAFC;
+  --color-primary: #1EBB90;
+  --color-primary-light: #2BC49B;
+  --color-secondary: #D9F2EB;
+  --color-accent: #F59E0B;
+  --color-background: #F4F7F6;
   --color-surface: #FFFFFF;
-  --color-text: #2D3748;
-  --color-muted: #718096;
-  --color-border: #E2E8F0;
-  --color-error: #E53E3E;
-  --color-success: #38A169;
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --color-text: #1E293B;
+  --color-muted: #8E9BAE;
+  --color-border: #E8ECEF;
+  --color-error: #EF4444;
+  --color-success: #10B981;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 }
 
 :root {
   /* Colors */
-  --color-primary: #1A365D; /* Deep Navy */
-  --color-primary-light: #2B6CB0;
-  --color-secondary: #00B5D8; /* Electric Blue */
-  --color-accent: #D69E2E; /* Gold */
+  --color-primary: #1EBB90; /* TeamHub primary green (mint) */
+  --color-primary-light: #2BC49B;
+  --color-secondary: #D9F2EB; /* Very pale mint for backgrounds */
+  --color-accent: #F59E0B; /* Accent */
   --color-accent-violet: #805AD5; /* Violet */
-  --color-background: #F7FAFC; /* Soft Gray */
+  --color-background: #F4F7F6; /* Light grayish off-white */
   --color-surface: #FFFFFF; /* Warm White */
-  --color-text: #2D3748; /* Charcoal */
-  --color-text-muted: #718096;
-  --color-border: #E2E8F0;
-  --color-error: #E53E3E;
-  --color-success: #38A169;
+  --color-text: #1E293B; /* Darker, softer text */
+  --color-text-muted: #8E9BAE; /* Distinct light gray for subtext */
+  --color-border: #E8ECEF; /* Very subtle border */
+  --color-error: #EF4444;
+  --color-success: #10B981;
 
   /* Typography */
-  --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
@@ -189,21 +189,6 @@ a:hover {
   margin-bottom: 1.5rem;
 }
 
-/* Admin panel theme scope — mint/teal HR-SaaS palette (TeamHub-inspired),
-   isolated to admin routes so the public site keeps its navy/blue brand. */
-.admin-shell {
-  --color-primary: #1EBB90;       /* TeamHub primary green (mint) */
-  --color-primary-light: #2BC49B; /* Slightly lighter mint */
-  --color-secondary: #D9F2EB;     /* Very pale mint for backgrounds */
-  --color-background: #F4F7F6;    /* Light grayish off-white */
-  --color-surface: #FFFFFF;
-  --color-text: #1E293B;          /* Darker, softer text */
-  --color-text-muted: #8E9BAE;    /* Distinct light gray for subtext */
-  --color-border: #E8ECEF;        /* Very subtle border */
-  --color-success: #10B981;
-  --color-error: #EF4444;
-  --color-accent: #F59E0B;
-}
 
 /* Custom Utilities for Admin Redesign */
 .shadow-soft {
