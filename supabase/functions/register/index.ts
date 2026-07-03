@@ -117,6 +117,7 @@ Deno.serve(async (req) => {
     p_address: body.address ?? null,
     p_notes: body.notes ?? null,
     p_email: body.email ?? null,
+    p_form_response: body.form_response ?? {},
   });
 
   if (error) {

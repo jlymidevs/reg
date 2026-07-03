@@ -1,8 +1,24 @@
 import { useEffect, useState } from 'react';
-import { getAllEvents, createEvent, updateEvent } from '../../lib/api';
-import type { Event } from '../../lib/api';
-import { Plus, Edit2, CheckCircle2, XCircle, Calendar as CalendarIcon, Clock, Users, MapPin } from 'lucide-react';
+import { getAllEvents, createEvent, updateEvent, getEventFormFields } from '../../lib/api';
+import type { Event, CustomFormField, FormFieldType } from '../../lib/api';
+import { Plus, Edit2, CheckCircle2, XCircle, Calendar as CalendarIcon, Clock, Users, MapPin, GripVertical, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
 import { format } from 'date-fns';
+
+const FIELD_TYPES: { value: FormFieldType; label: string }[] = [
+  { value: 'text', label: 'Text' },
+  { value: 'email', label: 'Email' },
+  { value: 'phone', label: 'Phone' },
+  { value: 'number', label: 'Number' },
+  { value: 'dropdown', label: 'Dropdown' },
+  { value: 'checkbox', label: 'Checkbox' },
+  { value: 'radio', label: 'Radio button' },
+  { value: 'date', label: 'Date' },
+  { value: 'textarea', label: 'Textarea' },
+];
+
+function newField(): CustomFormField {
+  return { id: `f_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`, type: 'text', label: '', required: false };
+}
 
 export default function EventsManager() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -25,6 +41,7 @@ export default function EventsManager() {
     is_published: true,
     is_active: true
   });
+  const [customFields, setCustomFields] = useState<CustomFormField[]>([]);
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -67,6 +84,7 @@ export default function EventsManager() {
         is_published: event.is_published,
         is_active: event.is_active
       });
+      setCustomFields(getEventFormFields(event));
     } else {
       setEditingEvent(null);
       const now = new Date();
@@ -85,9 +103,28 @@ export default function EventsManager() {
         is_published: true,
         is_active: true
       });
+      setCustomFields([]);
     }
     setErrorMsg('');
     setIsModalOpen(true);
+  };
+
+  const updateField = (id: string, updates: Partial<CustomFormField>) => {
+    setCustomFields((fields) => fields.map((f) => (f.id === id ? { ...f, ...updates } : f)));
+  };
+
+  const moveField = (index: number, direction: -1 | 1) => {
+    setCustomFields((fields) => {
+      const next = [...fields];
+      const target = index + direction;
+      if (target < 0 || target >= next.length) return fields;
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  };
+
+  const removeField = (id: string) => {
+    setCustomFields((fields) => fields.filter((f) => f.id !== id));
   };
 
   const handleCloseModal = () => {
@@ -101,11 +138,13 @@ export default function EventsManager() {
     setErrorMsg('');
 
     try {
+      const cleanFields = customFields.filter((f) => f.label.trim() !== '');
       const payload = {
         ...formData,
         starts_at: new Date(formData.starts_at).toISOString(),
         ends_at: new Date(formData.ends_at).toISOString(),
         capacity: formData.capacity > 0 ? formData.capacity : null,
+        form_fields: cleanFields as any,
       };
 
       if (editingEvent) {
@@ -379,6 +418,70 @@ export default function EventsManager() {
                     <label htmlFor="allow_walk_in" className="font-medium text-text cursor-pointer">
                       Allow Walk-ins
                     </label>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-border mt-4">
+                  <div className="flex justify-between items-center mb-3">
+                    <div>
+                      <h4 className="font-bold text-text">Custom Registration Fields</h4>
+                      <p className="text-xs text-muted">Added below the standard name/phone/email fields on the public form.</p>
+                    </div>
+                    <button type="button" onClick={() => setCustomFields((f) => [...f, newField()])} className="btn btn-secondary text-sm px-3 py-1.5 rounded-lg flex items-center gap-1">
+                      <Plus size={14} /> Add Field
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {customFields.map((field, index) => (
+                      <div key={field.id} className="p-4 bg-background/50 rounded-xl border border-border/50">
+                        <div className="flex items-start gap-3">
+                          <GripVertical size={16} className="text-muted mt-3 shrink-0" />
+                          <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <input
+                              type="text"
+                              placeholder="Field label (e.g. T-shirt size)"
+                              className="input text-sm"
+                              value={field.label}
+                              onChange={(e) => updateField(field.id, { label: e.target.value })}
+                            />
+                            <select
+                              className="input text-sm"
+                              value={field.type}
+                              onChange={(e) => updateField(field.id, { type: e.target.value as FormFieldType })}
+                            >
+                              {FIELD_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                            </select>
+                            {(field.type === 'dropdown' || field.type === 'radio') && (
+                              <input
+                                type="text"
+                                placeholder="Options, comma separated"
+                                className="input text-sm sm:col-span-2"
+                                value={(field.options || []).join(', ')}
+                                onChange={(e) => updateField(field.id, { options: e.target.value.split(',').map((o) => o.trim()).filter(Boolean) })}
+                              />
+                            )}
+                            <label className="flex items-center gap-2 text-sm text-text cursor-pointer sm:col-span-2">
+                              <input
+                                type="checkbox"
+                                className="w-4 h-4 accent-secondary"
+                                checked={field.required}
+                                onChange={(e) => updateField(field.id, { required: e.target.checked })}
+                              />
+                              Required
+                            </label>
+                          </div>
+                          <div className="flex flex-col gap-1 shrink-0">
+                            <button type="button" onClick={() => moveField(index, -1)} disabled={index === 0} className="p-1.5 text-muted hover:text-primary disabled:opacity-30 rounded"><ArrowUp size={14} /></button>
+                            <button type="button" onClick={() => moveField(index, 1)} disabled={index === customFields.length - 1} className="p-1.5 text-muted hover:text-primary disabled:opacity-30 rounded"><ArrowDown size={14} /></button>
+                            <button type="button" onClick={() => removeField(field.id)} className="p-1.5 text-muted hover:text-error rounded"><Trash2 size={14} /></button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {customFields.length === 0 && (
+                      <p className="text-sm text-muted text-center py-4">No custom fields — registration form uses only the standard fields.</p>
+                    )}
                   </div>
                 </div>
               </form>

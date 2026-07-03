@@ -170,6 +170,7 @@ export interface Database {
           notes: string | null
           registered_at: string
           registered_by: string | null
+          form_response: Json
         }
         Insert: {
           id?: string
@@ -179,6 +180,7 @@ export interface Database {
           notes?: string | null
           registered_at?: string
           registered_by?: string | null
+          form_response?: Json
         }
         Update: {
           id?: string
@@ -188,6 +190,7 @@ export interface Database {
           notes?: string | null
           registered_at?: string
           registered_by?: string | null
+          form_response?: Json
         }
         Relationships: [
           {
@@ -223,6 +226,7 @@ export interface Database {
           created_by: string | null
           created_at: string
           updated_at: string | null
+          form_fields: Json
         }
         Insert: {
           id?: string
@@ -240,6 +244,7 @@ export interface Database {
           created_by?: string | null
           created_at?: string
           updated_at?: string | null
+          form_fields?: Json
         }
         Update: {
           id?: string
@@ -257,6 +262,7 @@ export interface Database {
           created_by?: string | null
           created_at?: string
           updated_at?: string | null
+          form_fields?: Json
         }
         Relationships: []
       }
@@ -486,6 +492,7 @@ export interface Database {
           p_address?: string | null
           p_notes?: string | null
           p_email?: string | null
+          p_form_response?: Json
         }
         Returns: Json
       }

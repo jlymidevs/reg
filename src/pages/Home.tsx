@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Calendar, MapPin, Clock, Users, ArrowRight, CheckCircle, Share2 } from 'lucide-react';
 import { format } from 'date-fns';
-import { getActiveEvents, registerForEvent } from '../lib/api';
+import { getActiveEvents, registerForEvent, getEventFormFields } from '../lib/api';
 import type { Event } from '../lib/api';
 import Turnstile from '../components/Turnstile';
 
@@ -42,6 +42,7 @@ export default function Home() {
   const [emailSent, setEmailSent] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [turnstileToken, setTurnstileToken] = useState('');
+  const [customAnswers, setCustomAnswers] = useState<Record<string, string | number | boolean>>({});
 
   useEffect(() => {
     getActiveEvents()
@@ -56,6 +57,7 @@ export default function Home() {
     setSuccess(false);
     setEmailSent(false);
     setTurnstileToken('');
+    setCustomAnswers({});
     setFormData({
       first_name: '',
       surname: '',
@@ -81,6 +83,7 @@ export default function Home() {
         phone: formData.phone,
         email: formData.email || undefined,
         turnstile_token: turnstileToken || undefined,
+        form_response: customAnswers,
       });
 
       setEmailSent(result.emailSent);
@@ -342,6 +345,69 @@ export default function Home() {
                         onChange={(e) => setFormData({...formData, email: e.target.value})}
                       />
                     </div>
+
+                    {getEventFormFields(selectedEvent).map((field) => (
+                      <div key={field.id} className="form-group mb-0">
+                        <label className="label" htmlFor={field.id}>
+                          {field.label} {field.required && '*'}
+                        </label>
+                        {field.type === 'textarea' ? (
+                          <textarea
+                            id={field.id}
+                            required={field.required}
+                            className="input resize-none"
+                            rows={3}
+                            value={String(customAnswers[field.id] ?? '')}
+                            onChange={(e) => setCustomAnswers((a) => ({ ...a, [field.id]: e.target.value }))}
+                          />
+                        ) : field.type === 'dropdown' ? (
+                          <select
+                            id={field.id}
+                            required={field.required}
+                            className="input"
+                            value={String(customAnswers[field.id] ?? '')}
+                            onChange={(e) => setCustomAnswers((a) => ({ ...a, [field.id]: e.target.value }))}
+                          >
+                            <option value="">Select...</option>
+                            {(field.options || []).map((opt) => <option key={opt} value={opt}>{opt}</option>)}
+                          </select>
+                        ) : field.type === 'radio' ? (
+                          <div className="flex flex-wrap gap-4">
+                            {(field.options || []).map((opt) => (
+                              <label key={opt} className="flex items-center gap-2 text-sm cursor-pointer">
+                                <input
+                                  type="radio"
+                                  name={field.id}
+                                  required={field.required}
+                                  checked={customAnswers[field.id] === opt}
+                                  onChange={() => setCustomAnswers((a) => ({ ...a, [field.id]: opt }))}
+                                />
+                                {opt}
+                              </label>
+                            ))}
+                          </div>
+                        ) : field.type === 'checkbox' ? (
+                          <label className="flex items-center gap-2 text-sm cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={Boolean(customAnswers[field.id])}
+                              onChange={(e) => setCustomAnswers((a) => ({ ...a, [field.id]: e.target.checked }))}
+                            />
+                            Yes
+                          </label>
+                        ) : (
+                          <input
+                            id={field.id}
+                            type={field.type === 'phone' ? 'tel' : field.type}
+                            required={field.required}
+                            className="input"
+                            value={String(customAnswers[field.id] ?? '')}
+                            onChange={(e) => setCustomAnswers((a) => ({ ...a, [field.id]: e.target.value }))}
+                          />
+                        )}
+                        {field.helpText && <p className="text-xs text-muted mt-1">{field.helpText}</p>}
+                      </div>
+                    ))}
 
                     {TURNSTILE_SITE_KEY && (
                       <Turnstile

@@ -17,6 +17,25 @@ export type RegistrationWithRelations = Registration & {
   events: Pick<Event, 'title'> | null;
 };
 
+// --- CUSTOM REGISTRATION FIELDS (simple per-event editor, not drag-and-drop) ---
+// Stored as events.form_fields (jsonb array). No conditional logic or file
+// uploads in this pass — see supabase_phase5_form_builder.sql.
+
+export type FormFieldType = 'text' | 'email' | 'phone' | 'number' | 'dropdown' | 'checkbox' | 'radio' | 'date' | 'textarea';
+
+export interface CustomFormField {
+  id: string;
+  type: FormFieldType;
+  label: string;
+  required: boolean;
+  helpText?: string;
+  options?: string[]; // dropdown/radio only
+}
+
+export function getEventFormFields(event: Event): CustomFormField[] {
+  return Array.isArray(event.form_fields) ? (event.form_fields as unknown as CustomFormField[]) : [];
+}
+
 // --- PUBLIC API ---
 
 export async function getActiveEvents() {
@@ -41,6 +60,7 @@ export interface RegistrationInput {
   email?: string;
   notes?: string;
   turnstile_token?: string;
+  form_response?: Record<string, string | number | boolean>;
 }
 
 export async function registerForEvent(input: RegistrationInput): Promise<{ emailSent: boolean }> {
