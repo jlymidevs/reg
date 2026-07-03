@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Users, CalendarDays, UserCheck, UserX } from 'lucide-react';
 import { getAllEvents, getAllRegistrations } from '../../lib/api';
-import type { Event } from '../../lib/api';
+import type { Event, RegistrationWithRelations } from '../../lib/api';
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
 
 export default function DashboardOverview() {
   const [events, setEvents] = useState<Event[]>([]);
-  const [registrations, setRegistrations] = useState<any[]>([]);
+  const [registrations, setRegistrations] = useState<RegistrationWithRelations[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -137,11 +137,11 @@ export default function DashboardOverview() {
               <div className="p-6 text-center text-muted">No registrations yet.</div>
             ) : (
               <ul className="divide-y divide-border">
-                {recentRegistrations.map((reg: any) => (
+                {recentRegistrations.map((reg) => (
                   <li key={reg.id} className="p-6 hover:bg-gray-50 transition-colors">
                     <div className="flex justify-between items-center">
                       <div>
-                        <h4 className="font-medium text-text">{reg.first_name} {reg.last_name}</h4>
+                        <h4 className="font-medium text-text">{reg.members?.first_name} {reg.members?.surname}</h4>
                         <p className="text-xs text-muted mt-1 truncate max-w-[200px]">{reg.events?.title}</p>
                       </div>
                       <span className={`badge ${

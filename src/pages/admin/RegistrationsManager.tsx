@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { getAllRegistrations, updateRegistrationStatus } from '../../lib/api';
+import type { RegistrationWithRelations } from '../../lib/api';
 import { Search, Filter, Phone, Calendar, User, MapPin } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function RegistrationsManager() {
-  const [registrations, setRegistrations] = useState<any[]>([]);
+  const [registrations, setRegistrations] = useState<RegistrationWithRelations[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -26,7 +27,7 @@ export default function RegistrationsManager() {
     }
   };
 
-  const handleStatusChange = async (id: string, status: string) => {
+  const handleStatusChange = async (id: string, status: 'registered' | 'cancelled' | 'attended') => {
     setUpdating(id);
     try {
       await updateRegistrationStatus(id, status);
@@ -42,9 +43,10 @@ export default function RegistrationsManager() {
   const filteredRegistrations = registrations.filter(reg => {
     const matchesFilter = filter === 'all' || reg.status === filter;
     const searchLower = searchTerm.toLowerCase();
-    const matchesSearch = 
-      reg.first_name.toLowerCase().includes(searchLower) ||
-      reg.last_name.toLowerCase().includes(searchLower) ||
+    const matchesSearch =
+      (reg.members?.first_name || '').toLowerCase().includes(searchLower) ||
+      (reg.members?.surname || '').toLowerCase().includes(searchLower) ||
+      (reg.members?.phone || '').toLowerCase().includes(searchLower) ||
       (reg.events?.title || '').toLowerCase().includes(searchLower);
       
     return matchesFilter && matchesSearch;
@@ -109,14 +111,18 @@ export default function RegistrationsManager() {
                 {filteredRegistrations.map((reg) => (
                   <tr key={reg.id} className="hover:bg-gray-50/50 transition-colors">
                     <td className="px-6 py-4">
-                      <div className="font-semibold text-text">{reg.first_name} {reg.last_name}</div>
+                      <div className="font-semibold text-text">{reg.members?.first_name} {reg.members?.surname}</div>
                       <div className="flex flex-col gap-1 mt-1">
-                        <div className="text-xs text-muted flex items-center gap-1">
-                          <MapPin size={12} /> {reg.city_address}
-                        </div>
-                        <a href={`tel:${reg.phone}`} className="text-xs text-secondary hover:underline flex items-center gap-1">
-                          <Phone size={12} /> {reg.phone}
-                        </a>
+                        {reg.members?.address && (
+                          <div className="text-xs text-muted flex items-center gap-1">
+                            <MapPin size={12} /> {reg.members.address}
+                          </div>
+                        )}
+                        {reg.members?.phone && (
+                          <a href={`tel:${reg.members.phone}`} className="text-xs text-secondary hover:underline flex items-center gap-1">
+                            <Phone size={12} /> {reg.members.phone}
+                          </a>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -125,7 +131,7 @@ export default function RegistrationsManager() {
                     <td className="px-6 py-4 text-sm text-muted">
                       <div className="flex items-center gap-1">
                         <Calendar size={14} />
-                        {format(new Date(reg.created_at), 'MMM d, yyyy h:mm a')}
+                        {format(new Date(reg.registered_at), 'MMM d, yyyy h:mm a')}
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -143,7 +149,7 @@ export default function RegistrationsManager() {
                         <select 
                           className="text-sm border border-border rounded-md px-2 py-1 bg-white focus:outline-none focus:border-secondary cursor-pointer"
                           value={reg.status}
-                          onChange={(e) => handleStatusChange(reg.id, e.target.value)}
+                          onChange={(e) => handleStatusChange(reg.id, e.target.value as 'registered' | 'cancelled' | 'attended')}
                         >
                           <option value="registered">Registered</option>
                           <option value="attended">Attended</option>

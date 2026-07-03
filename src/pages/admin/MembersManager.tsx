@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getAllRegistrations } from '../../lib/api';
-import { Search, User, Mail, Phone, Calendar, History, ArrowLeft, CheckCircle2, XCircle } from 'lucide-react';
+import { Search, User, MapPin, Phone, Calendar, History, ArrowLeft, CheckCircle2, XCircle } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function MembersManager() {
@@ -19,46 +19,44 @@ export default function MembersManager() {
     setLoading(true);
     try {
       const data = await getAllRegistrations();
-      
-      // Group registrations by email to form "Members"
+
+      // Group registrations by member to form the directory
       const membersMap = new Map();
-      
-      data.forEach((reg: any) => {
-        const email = reg.email.toLowerCase();
-        if (!membersMap.has(email)) {
-          membersMap.set(email, {
-            email,
-            full_name: reg.full_name,
-            phone: reg.phone,
+
+      data.forEach((reg) => {
+        const key = reg.member_id;
+        const fullName = `${reg.members?.first_name ?? ''} ${reg.members?.surname ?? ''}`.trim() || 'Unknown';
+        if (!membersMap.has(key)) {
+          membersMap.set(key, {
+            member_id: key,
+            full_name: fullName,
+            phone: reg.members?.phone ?? '',
+            address: reg.members?.address ?? '',
             total_events_registered: 0,
             total_events_attended: 0,
             total_events_cancelled: 0,
             event_history: []
           });
         }
-        
-        const member = membersMap.get(email);
-        member.full_name = reg.full_name; // latest name
-        member.phone = reg.phone;
-        
+
+        const member = membersMap.get(key);
         member.total_events_registered++;
         if (reg.status === 'attended') member.total_events_attended++;
         if (reg.status === 'cancelled') member.total_events_cancelled++;
-        
+
         member.event_history.push({
           registration_id: reg.id,
           event_id: reg.event_id,
           event_title: reg.events?.title,
           status: reg.status,
-          registered_at: reg.created_at,
+          registered_at: reg.registered_at,
           notes: reg.notes
         });
       });
-      
+
       const membersArray = Array.from(membersMap.values());
-      // Sort members by most events attended/registered
       membersArray.sort((a, b) => b.total_events_registered - a.total_events_registered);
-      
+
       setMembers(membersArray);
     } catch (err) {
       console.error('Error fetching members:', err);
@@ -69,7 +67,7 @@ export default function MembersManager() {
 
   const filteredMembers = members.filter(m => {
     const searchLower = searchTerm.toLowerCase();
-    return m.full_name.toLowerCase().includes(searchLower) || m.email.toLowerCase().includes(searchLower);
+    return m.full_name.toLowerCase().includes(searchLower) || (m.phone || '').toLowerCase().includes(searchLower);
   });
 
   if (selectedMember) {
@@ -91,12 +89,16 @@ export default function MembersManager() {
               <div>
                 <h2 className="text-3xl font-bold">{selectedMember.full_name}</h2>
                 <div className="flex gap-4 mt-2 text-blue-200 text-sm">
-                  <a href={`mailto:${selectedMember.email}`} className="flex items-center gap-1 hover:text-white transition-colors">
-                    <Mail size={14} /> {selectedMember.email}
-                  </a>
-                  <a href={`tel:${selectedMember.phone}`} className="flex items-center gap-1 hover:text-white transition-colors">
-                    <Phone size={14} /> {selectedMember.phone}
-                  </a>
+                  {selectedMember.address && (
+                    <span className="flex items-center gap-1">
+                      <MapPin size={14} /> {selectedMember.address}
+                    </span>
+                  )}
+                  {selectedMember.phone && (
+                    <a href={`tel:${selectedMember.phone}`} className="flex items-center gap-1 hover:text-white transition-colors">
+                      <Phone size={14} /> {selectedMember.phone}
+                    </a>
+                  )}
                 </div>
               </div>
             </div>
@@ -169,7 +171,7 @@ export default function MembersManager() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={18} />
           <input 
             type="text" 
-            placeholder="Search members by name or email..." 
+            placeholder="Search members by name or phone..."
             className="input pl-10 bg-gray-50"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -190,7 +192,7 @@ export default function MembersManager() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0 divide-y md:divide-y-0 md:border-t md:border-l border-border">
             {filteredMembers.map((member) => (
               <div 
-                key={member.email} 
+                key={member.member_id}
                 className="p-6 md:border-b md:border-r border-border hover:bg-gray-50 transition-colors cursor-pointer group"
                 onClick={() => setSelectedMember(member)}
               >
@@ -202,7 +204,7 @@ export default function MembersManager() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="font-semibold text-text truncate group-hover:text-primary transition-colors">{member.full_name}</h4>
-                    <p className="text-xs text-muted truncate mt-1">{member.email}</p>
+                    <p className="text-xs text-muted truncate mt-1">{member.phone}</p>
                     <div className="mt-3 flex gap-2">
                       <span className="badge badge-primary text-[10px] py-0.5">
                         {member.total_events_registered} Events

@@ -1,16 +1,24 @@
 import { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Lock, ArrowRight } from 'lucide-react';
+import { Lock, Mail, ArrowRight } from 'lucide-react';
 
 export default function Login() {
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { isAdmin, signIn } = useAuth();
+  const { isAdmin, loading: authLoading, authError, signIn } = useAuth();
 
-  // If already logged in and admin, go to dashboard
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-xl text-primary font-medium">Verifying access...</div>
+      </div>
+    );
+  }
+
   if (isAdmin) {
     return <Navigate to="/admin" replace />;
   }
@@ -21,18 +29,15 @@ export default function Login() {
     setError('');
 
     try {
-      // We simulate a small delay to feel like a real login
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const success = signIn(password);
-
-      if (success) {
+      const result = await signIn(email, password);
+      if (result.ok) {
         navigate('/admin', { replace: true });
       } else {
-        throw new Error('Invalid password');
+        setError(result.message || 'Failed to sign in');
       }
-    } catch (err: any) {
-      setError(err.message || 'Failed to sign in');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to sign in');
+    } finally {
       setLoading(false);
     }
   };
@@ -52,22 +57,41 @@ export default function Login() {
           <p className="text-muted mt-2">Sign in to manage your events and registrations</p>
         </div>
 
-        {error && (
+        {(error || authError) && (
           <div className="mb-6 p-4 bg-error/10 border border-error/20 text-error rounded-md text-sm text-center">
-            {error}
+            {error || authError}
           </div>
         )}
 
         <form onSubmit={handleLogin} className="space-y-5">
           <div className="form-group mb-0">
+            <label className="label" htmlFor="email">Email</label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={18} />
+              <input
+                id="email"
+                type="email"
+                required
+                autoComplete="email"
+                className="input pl-10"
+                placeholder="admin@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
+              />
+            </div>
+          </div>
+
+          <div className="form-group mb-0">
             <label className="label" htmlFor="password">Password</label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={18} />
-              <input 
+              <input
                 id="password"
-                type="password" 
+                type="password"
                 required
-                className="input pl-10" 
+                autoComplete="current-password"
+                className="input pl-10"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -76,8 +100,8 @@ export default function Login() {
             </div>
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="btn btn-primary w-full mt-6"
             disabled={loading}
           >
@@ -86,9 +110,9 @@ export default function Login() {
         </form>
 
         <div className="mt-8 text-center">
-          <button 
+          <button
             onClick={() => navigate('/')}
-            className="text-sm text-muted hover:text-primary transition-colors"
+            className="text-sm text-muted hover:text-primary transition-colors cursor-pointer"
           >
             &larr; Back to Public Website
           </button>

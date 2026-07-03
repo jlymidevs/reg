@@ -1,8 +1,25 @@
 import { useEffect, useState } from 'react';
 import { Calendar, MapPin, Clock, Users, ArrowRight, CheckCircle, Share2 } from 'lucide-react';
 import { format } from 'date-fns';
-import { getActiveEvents, createRegistration } from '../lib/api';
+import { getActiveEvents, registerForEvent } from '../lib/api';
 import type { Event } from '../lib/api';
+
+// Curated event/gathering photos (stable Unsplash IDs — easy to replace later)
+const EVENT_IMAGES = [
+  'https://images.unsplash.com/photo-1540575467063-178a50c2df87', // conference audience
+  'https://images.unsplash.com/photo-1511578314322-379afb476865', // event hall lights
+  'https://images.unsplash.com/photo-1475721027785-f74eccf877e2', // speaker on stage
+  'https://images.unsplash.com/photo-1523580494863-6f3031224c94', // seminar crowd
+  'https://images.unsplash.com/photo-1505373877841-8d25f7d46678', // stage presentation
+  'https://images.unsplash.com/photo-1528605248644-14dd04022da1', // community gathering
+];
+
+function eventImage(id: string, width = 800) {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
+  const base = EVENT_IMAGES[hash % EVENT_IMAGES.length];
+  return `${base}?q=80&w=${width}&auto=format&fit=crop`;
+}
 
 export default function Home() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -12,8 +29,8 @@ export default function Home() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [formData, setFormData] = useState({
     first_name: '',
-    last_name: '',
-    city_address: '',
+    surname: '',
+    address: '',
     phone: ''
   });
   const [submitting, setSubmitting] = useState(false);
@@ -22,11 +39,8 @@ export default function Home() {
 
   useEffect(() => {
     getActiveEvents()
-      .then(data => {
-        // Only show future/ongoing events (optional)
-        const futureEvents = data.filter(e => new Date(e.ends_at) > new Date());
-        setEvents(futureEvents.length > 0 ? futureEvents : data);
-      })
+      // Server already filters to active, published, not-yet-ended events
+      .then(setEvents)
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
@@ -36,8 +50,8 @@ export default function Home() {
     setSuccess(false);
     setFormData({
       first_name: '',
-      last_name: '',
-      city_address: '',
+      surname: '',
+      address: '',
       phone: ''
     });
   };
@@ -50,11 +64,11 @@ export default function Home() {
     setErrorMsg('');
     
     try {
-      await createRegistration({
+      await registerForEvent({
         event_id: selectedEvent.id,
         first_name: formData.first_name,
-        last_name: formData.last_name,
-        city_address: formData.city_address,
+        surname: formData.surname,
+        address: formData.address,
         phone: formData.phone,
       });
       
@@ -93,7 +107,7 @@ export default function Home() {
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 bg-primary/95 mix-blend-multiply z-10"></div>
           <img 
-            src={nextEvent ? `https://images.unsplash.com/photo-[RANDOM]?q=80&w=2070&auto=format&fit=crop`.replace('[RANDOM]', nextEvent.id.substring(0, 8) + '123') : "https://images.unsplash.com/photo-1540575467063-118cb10f643c?q=80&w=2070&auto=format&fit=crop"} 
+            src={nextEvent ? eventImage(nextEvent.id, 2070) : "https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=2070&auto=format&fit=crop"}
             alt="Event background" 
             className="w-full h-full object-cover"
           />
@@ -138,7 +152,7 @@ export default function Home() {
                 <div key={event.id} className="card group hover:-translate-y-2 hover:shadow-xl transition-all duration-300 border border-border/50 overflow-hidden flex flex-col h-full">
                   <div className="h-48 bg-gray-100 relative overflow-hidden">
                     <img 
-                      src={`https://images.unsplash.com/photo-[RANDOM]?q=80&w=800&auto=format&fit=crop`.replace('[RANDOM]', event.id.substring(0, 8) + '123')} 
+                      src={eventImage(event.id)}
                       alt={event.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       onError={(e) => {
@@ -270,21 +284,21 @@ export default function Home() {
                         />
                       </div>
                       <div className="form-group mb-0">
-                        <label className="label" htmlFor="last_name">Last Name *</label>
-                        <input 
-                          id="last_name"
-                          type="text" 
+                        <label className="label" htmlFor="surname">Last Name *</label>
+                        <input
+                          id="surname"
+                          type="text"
                           required
-                          className="input" 
+                          className="input"
                           placeholder="Doe"
-                          value={formData.last_name}
-                          onChange={(e) => setFormData({...formData, last_name: e.target.value})}
+                          value={formData.surname}
+                          onChange={(e) => setFormData({...formData, surname: e.target.value})}
                         />
                       </div>
                     </div>
                     
                     <div className="form-group mb-0">
-                      <label className="label" htmlFor="city_address">City Address *</label><input id="city_address" type="text" required className="input" placeholder="e.g. Quezon City" value={formData.city_address} onChange={(e) => setFormData({...formData, city_address: e.target.value})} />
+                      <label className="label" htmlFor="address">City Address *</label><input id="address" type="text" required className="input" placeholder="e.g. Quezon City" value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} />
                     </div>
                     
                     <div className="form-group mb-0">
