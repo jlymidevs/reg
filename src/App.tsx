@@ -14,7 +14,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="admin-shell min-h-screen flex items-center justify-center bg-background">
         <div className="text-xl text-primary font-medium">Verifying access...</div>
       </div>
     );

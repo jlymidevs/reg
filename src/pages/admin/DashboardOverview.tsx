@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Users, CalendarDays, UserCheck, UserX } from 'lucide-react';
+import { CalendarDays } from 'lucide-react';
 import { getAllEvents, getAllRegistrations } from '../../lib/api';
 import type { Event, RegistrationWithRelations } from '../../lib/api';
 import { format } from 'date-fns';
@@ -44,78 +44,75 @@ export default function DashboardOverview() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="card p-6 border-l-4 border-l-secondary">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-sm font-medium text-muted mb-1">Active Events</p>
-              <h3 className="text-3xl font-bold text-primary">{activeEventsCount}</h3>
-            </div>
-            <div className="p-3 bg-secondary/10 rounded-lg text-secondary">
-              <CalendarDays size={24} />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="card shadow-card p-6 flex flex-col items-center justify-center text-center">
+          <div className="progress-circle mb-4" style={{ background: `conic-gradient(var(--color-primary) ${activeEventsCount ? 100 : 0}%, var(--color-border) 0)` }}>
+            <div className="progress-circle-inner">
+              <span className="text-2xl font-bold text-text leading-none mt-2">{activeEventsCount}</span>
+              <span className="text-[10px] text-text-muted mt-1 uppercase font-semibold">Events</span>
             </div>
           </div>
+          <p className="font-semibold text-text text-sm">Active Events</p>
         </div>
 
-        <div className="card p-6 border-l-4 border-l-primary">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-sm font-medium text-muted mb-1">Registered</p>
-              <h3 className="text-3xl font-bold text-primary">{registeredCount}</h3>
-            </div>
-            <div className="p-3 bg-primary/10 rounded-lg text-primary">
-              <Users size={24} />
+        <div className="card shadow-card p-6 flex flex-col items-center justify-center text-center">
+          <div className="progress-circle mb-4" style={{ background: `conic-gradient(var(--color-success) ${Math.min(100, (registeredCount / (registrations.length || 1)) * 100)}%, var(--color-border) 0)` }}>
+            <div className="progress-circle-inner">
+              <span className="text-2xl font-bold text-text leading-none mt-2">{registeredCount}</span>
+              <span className="text-[10px] text-text-muted mt-1 uppercase font-semibold">Total</span>
             </div>
           </div>
+          <p className="font-semibold text-text text-sm">Registered</p>
         </div>
 
-        <div className="card p-6 border-l-4 border-l-success">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-sm font-medium text-muted mb-1">Attended</p>
-              <h3 className="text-3xl font-bold text-primary">{attendedCount}</h3>
-            </div>
-            <div className="p-3 bg-success/10 rounded-lg text-success">
-              <UserCheck size={24} />
+        <div className="card shadow-card p-6 flex flex-col items-center justify-center text-center">
+          <div className="progress-circle mb-4" style={{ background: `conic-gradient(var(--color-secondary) ${Math.min(100, (attendedCount / (registeredCount || 1)) * 100)}%, var(--color-border) 0)` }}>
+            <div className="progress-circle-inner">
+              <span className="text-2xl font-bold text-text leading-none mt-2">{attendedCount}</span>
+              <span className="text-[10px] text-text-muted mt-1 uppercase font-semibold">Present</span>
             </div>
           </div>
+          <p className="font-semibold text-text text-sm">Attended</p>
         </div>
 
-        <div className="card p-6 border-l-4 border-l-error">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-sm font-medium text-muted mb-1">Cancelled</p>
-              <h3 className="text-3xl font-bold text-primary">{cancelledCount}</h3>
-            </div>
-            <div className="p-3 bg-error/10 rounded-lg text-error">
-              <UserX size={24} />
+        <div className="card shadow-card p-6 flex flex-col items-center justify-center text-center">
+          <div className="progress-circle mb-4" style={{ background: `conic-gradient(var(--color-error) ${Math.min(100, (cancelledCount / (registrations.length || 1)) * 100)}%, var(--color-border) 0)` }}>
+            <div className="progress-circle-inner">
+              <span className="text-2xl font-bold text-text leading-none mt-2">{cancelledCount}</span>
+              <span className="text-[10px] text-text-muted mt-1 uppercase font-semibold">Lost</span>
             </div>
           </div>
+          <p className="font-semibold text-text text-sm">Cancelled</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Upcoming Events */}
-        <div className="card">
+        <div className="card shadow-card">
           <div className="p-6 border-b border-border flex justify-between items-center">
-            <h3 className="text-lg font-bold">Upcoming Events</h3>
-            <Link to="/admin/events" className="text-sm text-secondary font-medium hover:underline">View all</Link>
+            <h3 className="text-base font-bold text-text">Upcoming Events</h3>
+            <Link to="/admin/events" className="text-xs text-primary font-bold hover:underline px-3 py-1 bg-secondary rounded-full">View all</Link>
           </div>
           <div className="p-0">
             {upcomingEvents.length === 0 ? (
-              <div className="p-6 text-center text-muted">No upcoming events.</div>
+              <div className="p-6 text-center text-text-muted text-sm">No upcoming events.</div>
             ) : (
               <ul className="divide-y divide-border">
                 {upcomingEvents.map(event => (
-                  <li key={event.id} className="p-6 hover:bg-gray-50 transition-colors">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h4 className="font-semibold text-primary mb-1">{event.title}</h4>
-                        <p className="text-sm text-muted">
-                          {format(new Date(event.starts_at), 'MMM d, yyyy')} • {format(new Date(event.starts_at), 'h:mm a')}
-                        </p>
+                  <li key={event.id} className="p-6 hover:bg-background/50 transition-colors">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                          <CalendarDays size={18} />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-sm text-text mb-0.5">{event.title}</h4>
+                          <p className="text-xs text-text-muted">
+                            {format(new Date(event.starts_at), 'MMM d')} • {format(new Date(event.starts_at), 'h:mm a')}
+                          </p>
+                        </div>
                       </div>
-                      <span className={`badge ${event.is_active ? 'badge-success' : 'badge-neutral'}`}>
+                      <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${event.is_active ? 'bg-[#10B981]/10 text-[#10B981]' : 'bg-gray-100 text-gray-500'}`}>
                         {event.is_active ? 'Active' : 'Draft'}
                       </span>
                     </div>
@@ -127,26 +124,31 @@ export default function DashboardOverview() {
         </div>
 
         {/* Recent Registrations */}
-        <div className="card">
+        <div className="card shadow-card">
           <div className="p-6 border-b border-border flex justify-between items-center">
-            <h3 className="text-lg font-bold">Recent Registrations</h3>
-            <Link to="/admin/registrations" className="text-sm text-secondary font-medium hover:underline">View all</Link>
+            <h3 className="text-base font-bold text-text">Recent Registrations</h3>
+            <Link to="/admin/registrations" className="text-xs text-primary font-bold hover:underline px-3 py-1 bg-secondary rounded-full">View all</Link>
           </div>
           <div className="p-0">
             {recentRegistrations.length === 0 ? (
-              <div className="p-6 text-center text-muted">No registrations yet.</div>
+              <div className="p-6 text-center text-text-muted text-sm">No registrations yet.</div>
             ) : (
               <ul className="divide-y divide-border">
                 {recentRegistrations.map((reg) => (
-                  <li key={reg.id} className="p-6 hover:bg-gray-50 transition-colors">
+                  <li key={reg.id} className="p-6 hover:bg-background/50 transition-colors">
                     <div className="flex justify-between items-center">
-                      <div>
-                        <h4 className="font-medium text-text">{reg.members?.first_name} {reg.members?.surname}</h4>
-                        <p className="text-xs text-muted mt-1 truncate max-w-[200px]">{reg.events?.title}</p>
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full bg-secondary text-primary font-bold flex items-center justify-center text-sm shrink-0">
+                          {reg.members?.first_name?.charAt(0) || 'U'}
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-sm text-text mb-0.5">{reg.members?.first_name} {reg.members?.surname}</h4>
+                          <p className="text-xs text-text-muted truncate max-w-[180px]">{reg.events?.title}</p>
+                        </div>
                       </div>
-                      <span className={`badge ${
-                        reg.status === 'registered' ? 'badge-primary' : 
-                        reg.status === 'attended' ? 'badge-success' : 'badge-neutral'
+                      <span className={`text-[10px] font-bold px-2 py-1 uppercase rounded-md ${
+                        reg.status === 'registered' ? 'bg-secondary text-primary' : 
+                        reg.status === 'attended' ? 'bg-[#10B981]/10 text-[#10B981]' : 'bg-gray-100 text-gray-500'
                       }`}>
                         {reg.status}
                       </span>

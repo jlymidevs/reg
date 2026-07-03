@@ -138,26 +138,26 @@ export default function EventsManager() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-primary mb-2">Events Management</h2>
-          <p className="text-muted">Create and manage your organization's events.</p>
+          <h2 className="text-2xl font-bold text-text mb-1">Events Management</h2>
+          <p className="text-sm text-text-muted">Create and manage your organization's events.</p>
         </div>
         <button 
           onClick={() => handleOpenModal()} 
-          className="btn btn-primary whitespace-nowrap"
+          className="btn btn-primary rounded-xl px-5 shadow-md shadow-primary/20 whitespace-nowrap"
         >
           <Plus size={18} className="mr-2" /> Create New Event
         </button>
       </div>
 
-      <div className="card overflow-hidden">
+      <div className="card shadow-card overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center text-muted">Loading events...</div>
+          <div className="p-8 text-center text-text-muted">Loading events...</div>
         ) : events.length === 0 ? (
           <div className="p-12 text-center">
-            <CalendarIcon size={48} className="mx-auto text-muted mb-4 opacity-50" />
-            <h3 className="text-xl font-medium text-text mb-2">No events found</h3>
-            <p className="text-muted mb-6">You haven't created any events yet.</p>
-            <button onClick={() => handleOpenModal()} className="btn btn-secondary">
+            <CalendarIcon size={48} className="mx-auto text-text-muted mb-4 opacity-50" />
+            <h3 className="text-lg font-bold text-text mb-2">No events found</h3>
+            <p className="text-sm text-text-muted mb-6">You haven't created any events yet.</p>
+            <button onClick={() => handleOpenModal()} className="btn btn-primary">
               Create your first event
             </button>
           </div>
@@ -165,38 +165,38 @@ export default function EventsManager() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-gray-50 border-b border-border text-sm text-muted">
-                  <th className="px-6 py-4 font-medium">Event</th>
-                  <th className="px-6 py-4 font-medium">Date & Time</th>
-                  <th className="px-6 py-4 font-medium">Capacity</th>
-                  <th className="px-6 py-4 font-medium">Status</th>
-                  <th className="px-6 py-4 font-medium text-right">Actions</th>
+                <tr className="bg-background/80 border-b border-border text-xs text-text-muted uppercase tracking-wider font-semibold">
+                  <th className="px-6 py-4">Event</th>
+                  <th className="px-6 py-4">Date & Time</th>
+                  <th className="px-6 py-4">Capacity</th>
+                  <th className="px-6 py-4">Status</th>
+                  <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border">
+              <tbody className="divide-y divide-border/50">
                 {events.map((event) => (
-                  <tr key={event.id} className="hover:bg-gray-50/50 transition-colors">
+                  <tr key={event.id} className="hover:bg-background/50 transition-colors">
                     <td className="px-6 py-4">
-                      <div className="font-semibold text-primary">{event.title}</div>
-                      <div className="text-xs text-muted flex items-center gap-1 mt-1">
+                      <div className="font-bold text-sm text-text">{event.title}</div>
+                      <div className="text-xs text-text-muted flex items-center gap-1 mt-1">
                         <MapPin size={12} /> {event.venue || 'No venue set'}
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm">
-                      <div>{format(new Date(event.starts_at), 'MMM d, yyyy')}</div>
-                      <div className="text-muted text-xs flex items-center gap-1 mt-1">
+                      <div className="font-medium text-text">{format(new Date(event.starts_at), 'MMM d, yyyy')}</div>
+                      <div className="text-text-muted text-xs flex items-center gap-1 mt-1">
                         <Clock size={12} /> {format(new Date(event.starts_at), 'h:mm a')} - {format(new Date(event.ends_at), 'h:mm a')}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm">
-                      <div className="flex items-center gap-1">
-                        <Users size={14} className="text-muted" /> {event.capacity || 'Unlimited'}
+                    <td className="px-6 py-4 text-sm font-medium text-text">
+                      <div className="flex items-center gap-1.5">
+                        <Users size={14} className="text-primary" /> {event.capacity || 'Unlimited'}
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <button 
                         onClick={() => toggleEventStatus(event)}
-                        className={`badge transition-colors hover:opacity-80 ${event.is_active ? 'badge-success' : 'badge-neutral'}`}
+                        className={`text-xs font-bold px-3 py-1 uppercase rounded-md transition-colors hover:opacity-80 ${event.is_active ? 'bg-[#10B981]/10 text-[#10B981]' : 'bg-gray-100 text-gray-500'}`}
                         title={event.is_active ? "Click to deactivate" : "Click to activate"}
                       >
                         {event.is_active ? 'Active' : 'Inactive'}
@@ -205,10 +205,10 @@ export default function EventsManager() {
                     <td className="px-6 py-4 text-right">
                       <button 
                         onClick={() => handleOpenModal(event)}
-                        className="p-2 text-muted hover:text-secondary hover:bg-secondary/10 rounded-lg transition-colors"
+                        className="p-2 text-text-muted hover:text-primary hover:bg-secondary/50 rounded-lg transition-colors"
                         title="Edit Event"
                       >
-                        <Edit2 size={18} />
+                        <Edit2 size={16} />
                       </button>
                     </td>
                   </tr>

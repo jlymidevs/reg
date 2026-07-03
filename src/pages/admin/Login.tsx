@@ -13,7 +13,7 @@ export default function Login() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="admin-shell min-h-screen flex items-center justify-center bg-background">
         <div className="text-xl text-primary font-medium">Verifying access...</div>
       </div>
     );
@@ -54,7 +54,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6 relative overflow-hidden">
+    <div className="admin-shell min-h-screen flex items-center justify-center bg-background p-6 relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-primary/5 rounded-full blur-3xl"></div>
       <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-secondary/5 rounded-full blur-3xl"></div>

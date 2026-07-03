@@ -189,6 +189,60 @@ a:hover {
   margin-bottom: 1.5rem;
 }
 
+/* Admin panel theme scope — mint/teal HR-SaaS palette (TeamHub-inspired),
+   isolated to admin routes so the public site keeps its navy/blue brand. */
+.admin-shell {
+  --color-primary: #1EBB90;       /* TeamHub primary green (mint) */
+  --color-primary-light: #2BC49B; /* Slightly lighter mint */
+  --color-secondary: #D9F2EB;     /* Very pale mint for backgrounds */
+  --color-background: #F4F7F6;    /* Light grayish off-white */
+  --color-surface: #FFFFFF;
+  --color-text: #1E293B;          /* Darker, softer text */
+  --color-text-muted: #8E9BAE;    /* Distinct light gray for subtext */
+  --color-border: #E8ECEF;        /* Very subtle border */
+  --color-success: #10B981;
+  --color-error: #EF4444;
+  --color-accent: #F59E0B;
+}
+
+/* Custom Utilities for Admin Redesign */
+.shadow-soft {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+.shadow-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02), 0 1px 2px rgba(0, 0, 0, 0.01);
+}
+
+.rounded-2xl {
+  border-radius: 1rem;
+}
+
+.progress-circle {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.progress-circle::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  background-color: white;
+  border-radius: 50%;
+}
+.progress-circle-inner {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+
 /* Layout Classes */
 .container {
   width: 100%;

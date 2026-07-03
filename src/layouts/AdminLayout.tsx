@@ -7,7 +7,9 @@ import {
   LogOut, 
   Menu, 
   X,
-  ExternalLink
+  ExternalLink,
+  Search,
+  Bell
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -37,46 +39,49 @@ export default function AdminLayout() {
   };
 
   return (
-    <div className="min-h-screen flex bg-background">
+    <div className="admin-shell min-h-screen flex bg-background">
       {/* Sidebar Desktop */}
-      <aside className="hidden md:flex flex-col w-64 bg-primary text-white h-screen sticky top-0 border-r border-primary-light">
-        <div className="p-6 border-b border-primary-light">
-          <h1 className="text-xl font-bold flex items-center gap-2">
-            <img src="/logo.png" alt="JLYCC REG Logo" className="w-8 h-8 object-contain bg-white rounded-md p-1" />
+      <aside className="hidden md:flex flex-col w-64 bg-white text-text h-screen sticky top-0 border-r border-border">
+        <div className="p-6 border-b border-border">
+          <h1 className="text-xl font-bold flex items-center gap-2 text-primary">
+            <img src="/logo.png" alt="JLYCC REG Logo" className="w-8 h-8 object-contain rounded-md" />
             Admin Panel
           </h1>
-          <p className="text-blue-200 text-xs mt-1 truncate">
+          <p className="text-muted text-xs mt-1 truncate">
             Event Registration
           </p>
         </div>
-        
+
         <nav className="flex-1 py-6 px-4 space-y-2 overflow-y-auto">
           {navItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
                 isActive(item.path)
-                  ? 'bg-primary-light text-white font-medium shadow-md'
-                  : 'text-blue-200 hover:bg-white/5 hover:text-white'
+                  ? 'bg-primary text-white shadow-md shadow-primary/20'
+                  : 'text-text-muted hover:bg-secondary/50 hover:text-primary'
               }`}
             >
-              <item.icon size={20} className={isActive(item.path) ? 'text-secondary' : 'text-blue-300'} />
+              <item.icon size={20} className={isActive(item.path) ? 'text-white' : 'text-text-muted group-hover:text-primary'} />
               {item.name}
             </Link>
           ))}
         </nav>
-        
-        <div className="p-4 border-t border-primary-light">
-          <div className="mb-4 px-4 py-3 bg-white/5 rounded-lg border border-white/10">
-            <p className="text-xs text-blue-200 mb-1">Logged in as</p>
-            <p className="text-sm font-medium truncate" title="Admin">Admin User</p>
+
+        <div className="p-4 border-t border-border space-y-4">
+          <div className="p-4 bg-secondary/30 rounded-2xl border border-secondary/50 text-center">
+            <h4 className="font-bold text-primary mb-2 text-sm">Level Up Your Event System</h4>
+            <p className="text-xs text-text-muted mb-4">Get full access to advanced modules and automated features.</p>
+            <button className="w-full py-2 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primary-light transition-colors">
+              Get Pro Version
+            </button>
           </div>
-          <button 
+          <button
             onClick={handleSignOut}
-            className="flex w-full items-center gap-3 px-4 py-2 text-blue-200 hover:text-error hover:bg-white/5 rounded-lg transition-colors"
+            className="flex w-full items-center justify-center gap-2 px-4 py-2.5 text-text-muted hover:text-error hover:bg-error/10 rounded-xl transition-colors cursor-pointer font-medium text-sm"
           >
-            <LogOut size={20} />
+            <LogOut size={18} />
             Sign Out
           </button>
         </div>
@@ -88,7 +93,7 @@ export default function AdminLayout() {
           <img src="/logo.png" alt="JLYCC REG Logo" className="w-6 h-6 object-contain bg-white rounded-sm p-0.5" />
           Admin
         </h1>
-        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 text-blue-200 hover:text-white">
+        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 text-white/70 hover:text-white cursor-pointer">
           {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
@@ -105,17 +110,17 @@ export default function AdminLayout() {
                 className={`flex items-center gap-3 px-4 py-4 rounded-lg text-lg ${
                   isActive(item.path)
                     ? 'bg-primary-light text-white font-medium'
-                    : 'text-blue-200'
+                    : 'text-white/70'
                 }`}
               >
-                <item.icon size={24} className={isActive(item.path) ? 'text-secondary' : 'text-blue-300'} />
+                <item.icon size={24} className={isActive(item.path) ? 'text-white' : 'text-white/50'} />
                 {item.name}
               </Link>
             ))}
-            <div className="pt-8 mt-8 border-t border-primary-light">
-              <button 
+            <div className="pt-8 mt-8 border-t border-white/10">
+              <button
                 onClick={handleSignOut}
-                className="flex w-full items-center gap-3 px-4 py-4 text-error text-lg"
+                className="flex w-full items-center gap-3 px-4 py-4 text-white text-lg cursor-pointer"
               >
                 <LogOut size={24} />
                 Sign Out
@@ -127,15 +132,38 @@ export default function AdminLayout() {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-h-screen pt-16 md:pt-0 overflow-x-hidden">
-        <header className="bg-white border-b border-border h-16 hidden md:flex items-center justify-between px-8 sticky top-0 z-10">
-          <div className="text-muted text-sm font-medium">
-            {navItems.find(item => isActive(item.path))?.name}
+        <header className="bg-white border-b border-border h-20 hidden md:flex items-center justify-between px-8 sticky top-0 z-10 shadow-sm">
+          <div className="flex items-center gap-4 text-text-muted text-sm font-medium flex-1">
+            <div className="relative w-full max-w-md hidden lg:block">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
+              <input 
+                type="text" 
+                placeholder="Search anything..." 
+                className="w-full pl-10 pr-4 py-2.5 bg-background border border-border rounded-xl text-sm focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all"
+              />
+            </div>
+            <span className="lg:hidden">{navItems.find(item => isActive(item.path))?.name}</span>
           </div>
-          <Link to="/" target="_blank" className="text-sm font-medium text-secondary hover:text-primary-light flex items-center gap-1 transition-colors">
-            View Public Site <ExternalLink size={14} />
-          </Link>
+          <div className="flex items-center gap-6">
+            <Link to="/" target="_blank" className="text-sm font-medium text-text-muted hover:text-primary flex items-center gap-1 transition-colors">
+              <ExternalLink size={16} /> <span className="hidden xl:inline">Public Site</span>
+            </Link>
+            <button className="relative p-2 text-text-muted hover:text-primary transition-colors bg-background rounded-full">
+              <Bell size={20} />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-error rounded-full border-2 border-white"></span>
+            </button>
+            <div className="flex items-center gap-3 pl-6 border-l border-border">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold shadow-sm">
+                A
+              </div>
+              <div className="hidden xl:block">
+                <p className="text-sm font-bold text-text leading-tight">Admin User</p>
+                <p className="text-xs text-text-muted">Administrator</p>
+              </div>
+            </div>
+          </div>
         </header>
-        
+
         <div className="flex-1 p-6 md:p-8 overflow-y-auto">
           <Outlet />
         </div>
