@@ -1,4 +1,22 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+/* Map the design tokens into Tailwind's theme so utilities like
+   bg-primary, text-muted, border-border, bg-background resolve. */
+@theme {
+  --color-primary: #1A365D;
+  --color-primary-light: #2B6CB0;
+  --color-secondary: #00B5D8;
+  --color-accent: #D69E2E;
+  --color-background: #F7FAFC;
+  --color-surface: #FFFFFF;
+  --color-text: #2D3748;
+  --color-muted: #718096;
+  --color-border: #E2E8F0;
+  --color-error: #E53E3E;
+  --color-success: #38A169;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
 
 :root {
   /* Colors */
@@ -151,6 +169,12 @@ a:hover {
   outline: none;
   border-color: var(--color-secondary);
   box-shadow: 0 0 0 3px rgba(0, 181, 216, 0.2);
+}
+
+/* .input is unlayered so it outranks Tailwind's layered pl-10 utility;
+   restore the icon inset for inputs that combine both. */
+.input.pl-10 {
+  padding-left: 2.5rem;
 }
 
 .label {
