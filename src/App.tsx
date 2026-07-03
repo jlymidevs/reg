@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import PublicLayout from './layouts/PublicLayout';
 import AdminLayout from './layouts/AdminLayout';
 import Home from './pages/Home';
+import Feedback from './pages/Feedback';
 import Login from './pages/admin/Login';
 import DashboardOverview from './pages/admin/DashboardOverview';
 import EventsManager from './pages/admin/EventsManager';
@@ -10,6 +11,7 @@ import MembersManager from './pages/admin/MembersManager';
 import UsersRolesManager from './pages/admin/UsersRolesManager';
 import AuditLogManager from './pages/admin/AuditLogManager';
 import CheckInManager from './pages/admin/CheckInManager';
+import FeedbackManager from './pages/admin/FeedbackManager';
 import { useAuth } from './contexts/AuthContext';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -37,6 +39,7 @@ function App() {
       <Route path="/" element={<PublicLayout />}>
         <Route index element={<Home />} />
       </Route>
+      <Route path="/feedback/:token" element={<Feedback />} />
 
       {/* Admin Login */}
       <Route path="/admin/login" element={<Login />} />
@@ -54,6 +57,7 @@ function App() {
         <Route path="events" element={<EventsManager />} />
         <Route path="registrations" element={<RegistrationsManager />} />
         <Route path="check-in" element={<CheckInManager />} />
+        <Route path="feedback" element={<FeedbackManager />} />
         <Route path="members" element={<MembersManager />} />
         <Route path="users-roles" element={<UsersRolesManager />} />
         <Route path="audit-logs" element={<AuditLogManager />} />

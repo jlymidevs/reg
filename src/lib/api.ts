@@ -221,3 +221,96 @@ export async function undoCheckIn(registrationId: string) {
   if (error) throw error;
   return true;
 }
+
+// --- FEEDBACK ENGINE (balanced 20-person sample, preview/confirm-before-send) ---
+
+export type FeedbackBatch = Database['public']['Tables']['feedback_email_batches']['Row'];
+export type FeedbackRecipient = Database['public']['Tables']['feedback_email_recipients']['Row'];
+export type FeedbackResponse = Database['public']['Tables']['feedback_responses']['Row'];
+
+export interface FeedbackBatchPreview {
+  batch_id: string;
+  eligible_count: number;
+  selected_count: number;
+  warning: string | null;
+}
+
+export async function generateFeedbackBatch(eventId: string): Promise<FeedbackBatchPreview> {
+  const { data, error } = await supabase.rpc('generate_feedback_batch', { p_event_id: eventId });
+  if (error) throw error;
+  return data as unknown as FeedbackBatchPreview;
+}
+
+export async function getFeedbackBatchRecipients(batchId: string): Promise<(FeedbackRecipient & { members: Pick<Member, 'first_name' | 'surname'> | null })[]> {
+  const { data, error } = await supabase
+    .from('feedback_email_recipients')
+    .select('*, members(first_name, surname)')
+    .eq('batch_id', batchId);
+  if (error) throw error;
+  return (data ?? []) as any;
+}
+
+export async function getLatestFeedbackBatch(eventId: string): Promise<FeedbackBatch | null> {
+  const { data, error } = await supabase
+    .from('feedback_email_batches')
+    .select('*')
+    .eq('event_id', eventId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+export async function sendFeedbackBatch(batchId: string): Promise<{ sent: number; failed: number }> {
+  const { data, error } = await supabase.functions.invoke('send-feedback-batch', {
+    body: { batch_id: batchId },
+  });
+  if (error) {
+    const ctx = (error as { context?: Response }).context;
+    if (ctx) {
+      const body = await ctx.json().catch(() => null);
+      if (body?.error) throw new Error(body.error);
+    }
+    throw error;
+  }
+  return { sent: data?.sent ?? 0, failed: data?.failed ?? 0 };
+}
+
+export async function getFeedbackResponses(eventId: string): Promise<FeedbackResponse[]> {
+  const { data, error } = await supabase
+    .from('feedback_responses')
+    .select('*')
+    .eq('event_id', eventId)
+    .order('submitted_at', { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+// --- PUBLIC FEEDBACK FORM (token-based, no auth) ---
+
+export async function getFeedbackContext(token: string): Promise<{ event_title: string; already_responded: boolean }> {
+  const { data, error } = await supabase.rpc('get_feedback_context', { p_token: token });
+  if (error) throw error;
+  return data as { event_title: string; already_responded: boolean };
+}
+
+export interface FeedbackSubmission {
+  token: string;
+  overall_rating: number;
+  answers: Record<string, string | number>;
+  is_anonymous: boolean;
+  follow_up_requested: boolean;
+}
+
+export async function submitFeedback(input: FeedbackSubmission) {
+  const { error } = await supabase.rpc('submit_feedback_response', {
+    p_token: input.token,
+    p_overall_rating: input.overall_rating,
+    p_answers: input.answers,
+    p_is_anonymous: input.is_anonymous,
+    p_follow_up_requested: input.follow_up_requested,
+  });
+  if (error) throw error;
+  return true;
+}

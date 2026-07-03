@@ -319,6 +319,141 @@ export interface Database {
           },
         ]
       }
+      feedback_surveys: {
+        Row: {
+          id: string
+          event_id: string
+          title: string
+          description: string | null
+          status: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          event_id: string
+          title?: string
+          description?: string | null
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          event_id?: string
+          title?: string
+          description?: string | null
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      feedback_email_batches: {
+        Row: {
+          id: string
+          event_id: string
+          survey_id: string
+          created_by: string | null
+          eligible_count: number
+          selected_count: number
+          status: string
+          created_at: string
+          sent_at: string | null
+        }
+        Insert: {
+          id?: string
+          event_id: string
+          survey_id: string
+          created_by?: string | null
+          eligible_count?: number
+          selected_count?: number
+          status?: string
+          created_at?: string
+          sent_at?: string | null
+        }
+        Update: {
+          id?: string
+          event_id?: string
+          survey_id?: string
+          created_by?: string | null
+          eligible_count?: number
+          selected_count?: number
+          status?: string
+          created_at?: string
+          sent_at?: string | null
+        }
+        Relationships: []
+      }
+      feedback_email_recipients: {
+        Row: {
+          id: string
+          batch_id: string
+          event_id: string
+          member_id: string
+          email: string
+          token: string
+          status: string
+          sent_at: string | null
+          error_message: string | null
+        }
+        Insert: {
+          id?: string
+          batch_id: string
+          event_id: string
+          member_id: string
+          email: string
+          token?: string
+          status?: string
+          sent_at?: string | null
+          error_message?: string | null
+        }
+        Update: {
+          id?: string
+          batch_id?: string
+          event_id?: string
+          member_id?: string
+          email?: string
+          token?: string
+          status?: string
+          sent_at?: string | null
+          error_message?: string | null
+        }
+        Relationships: []
+      }
+      feedback_responses: {
+        Row: {
+          id: string
+          event_id: string
+          member_id: string | null
+          is_anonymous: boolean
+          overall_rating: number | null
+          answers: Json
+          follow_up_requested: boolean
+          submitted_at: string
+        }
+        Insert: {
+          id?: string
+          event_id: string
+          member_id?: string | null
+          is_anonymous?: boolean
+          overall_rating?: number | null
+          answers?: Json
+          follow_up_requested?: boolean
+          submitted_at?: string
+        }
+        Update: {
+          id?: string
+          event_id?: string
+          member_id?: string | null
+          is_anonymous?: boolean
+          overall_rating?: number | null
+          answers?: Json
+          follow_up_requested?: boolean
+          submitted_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       member_activity_summary_view: {
@@ -379,6 +514,28 @@ export interface Database {
           p_registration_id: string
         }
         Returns: boolean
+      }
+      generate_feedback_batch: {
+        Args: {
+          p_event_id: string
+        }
+        Returns: Json
+      }
+      get_feedback_context: {
+        Args: {
+          p_token: string
+        }
+        Returns: Json
+      }
+      submit_feedback_response: {
+        Args: {
+          p_token: string
+          p_overall_rating: number
+          p_answers: Json
+          p_is_anonymous?: boolean
+          p_follow_up_requested?: boolean
+        }
+        Returns: Json
       }
     }
     Enums: {
