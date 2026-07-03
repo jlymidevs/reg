@@ -64,6 +64,10 @@ export interface Database {
         Relationships: []
       }
       members: {
+        // NOTE: this is a partial view of the real table — `members` is the
+        // shared JLYCC PCM church CRM (44 columns: type, status_in_church,
+        // journey_status, ministry_involvement, etc). Only the columns this
+        // app actually queries are typed here; do not assume completeness.
         Row: {
           id: string
           first_name: string
@@ -75,14 +79,6 @@ export interface Database {
           email: string | null
           address: string | null
           status: string | null
-          member_type: string
-          tags: string[]
-          ministry_group: string | null
-          age_group: string | null
-          communication_consent: boolean
-          unsubscribed: boolean
-          is_active: boolean
-          archived_at: string | null
           created_at: string
         }
         Insert: {
@@ -96,14 +92,6 @@ export interface Database {
           email?: string | null
           address?: string | null
           status?: string | null
-          member_type?: string
-          tags?: string[]
-          ministry_group?: string | null
-          age_group?: string | null
-          communication_consent?: boolean
-          unsubscribed?: boolean
-          is_active?: boolean
-          archived_at?: string | null
           created_at?: string
         }
         Update: {
@@ -117,17 +105,61 @@ export interface Database {
           email?: string | null
           address?: string | null
           status?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      event_reg_member_meta: {
+        // Registration-app-specific classification, isolated from the
+        // shared members CRM table — see supabase_phase1_foundation.sql.
+        Row: {
+          member_id: string
+          member_type: string
+          tags: string[]
+          ministry_group: string | null
+          age_bracket: string | null
+          communication_consent: boolean
+          unsubscribed: boolean
+          is_active: boolean
+          archived_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          member_id: string
           member_type?: string
           tags?: string[]
           ministry_group?: string | null
-          age_group?: string | null
+          age_bracket?: string | null
           communication_consent?: boolean
           unsubscribed?: boolean
           is_active?: boolean
           archived_at?: string | null
           created_at?: string
+          updated_at?: string
         }
-        Relationships: []
+        Update: {
+          member_id?: string
+          member_type?: string
+          tags?: string[]
+          ministry_group?: string | null
+          age_bracket?: string | null
+          communication_consent?: boolean
+          unsubscribed?: boolean
+          is_active?: boolean
+          archived_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'event_reg_member_meta_member_id_fkey'
+            columns: ['member_id']
+            isOneToOne: true
+            referencedRelation: 'members'
+            referencedColumns: ['id']
+          },
+        ]
       }
       event_registrations: {
         Row: {

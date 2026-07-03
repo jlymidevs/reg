@@ -7,12 +7,13 @@ export type Registration = Database['public']['Tables']['event_registrations']['
 export type AdminUser = Database['public']['Tables']['admin_users']['Row'];
 export type AuditLog = Database['public']['Tables']['audit_logs']['Row'];
 export type MemberActivity = Database['public']['Views']['member_activity_summary_view']['Row'];
+export type MemberMeta = Database['public']['Tables']['event_reg_member_meta']['Row'];
 
 export const ADMIN_ROLES = ['super_admin', 'admin', 'event_manager', 'checkin_staff', 'finance', 'viewer', 'volunteer'] as const;
 export type AdminRole = typeof ADMIN_ROLES[number];
 
 export type RegistrationWithRelations = Registration & {
-  members: Pick<Member, 'first_name' | 'surname' | 'phone' | 'address' | 'member_type' | 'tags' | 'ministry_group' | 'age_group' | 'communication_consent' | 'unsubscribed' | 'is_active'> | null;
+  members: Pick<Member, 'first_name' | 'surname' | 'phone' | 'address'> | null;
   events: Pick<Event, 'title'> | null;
 };
 
@@ -90,7 +91,7 @@ export async function updateEvent(id: string, updates: Database['public']['Table
 export async function getAllRegistrations(): Promise<RegistrationWithRelations[]> {
   const { data, error } = await supabase
     .from('event_registrations')
-    .select('*, members(first_name, surname, phone, address, member_type, tags, ministry_group, age_group, communication_consent, unsubscribed, is_active), events(title)')
+    .select('*, members(first_name, surname, phone, address), events(title)')
     .order('registered_at', { ascending: false });
 
   if (error) throw error;
@@ -157,17 +158,27 @@ export async function getAuditLogs(limit = 200): Promise<AuditLog[]> {
 }
 
 // --- MEMBER CLASSIFICATION & ACTIVITY ---
+// Classification lives in event_reg_member_meta, isolated from the shared
+// members CRM table — see supabase_phase1_foundation.sql for why.
 
-export async function updateMemberClassification(id: string, updates: {
+export async function getMemberMetaMap(): Promise<Record<string, MemberMeta>> {
+  const { data, error } = await supabase.from('event_reg_member_meta').select('*');
+  if (error) throw error;
+  return Object.fromEntries((data ?? []).map((m) => [m.member_id, m]));
+}
+
+export async function updateMemberClassification(memberId: string, updates: {
   member_type?: string;
   tags?: string[];
   ministry_group?: string | null;
-  age_group?: string | null;
+  age_bracket?: string | null;
   communication_consent?: boolean;
   unsubscribed?: boolean;
   is_active?: boolean;
 }) {
-  const { error } = await supabase.from('members').update(updates).eq('id', id);
+  const { error } = await supabase
+    .from('event_reg_member_meta')
+    .upsert({ member_id: memberId, ...updates }, { onConflict: 'member_id' });
   if (error) throw error;
   return true;
 }
