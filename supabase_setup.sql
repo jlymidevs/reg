@@ -110,26 +110,33 @@ grant execute on function public.register_for_event to anon, authenticated;
 -- 3. Admin policies for the registration dashboard (additive; permissive OR
 --    with any existing policies)
 -- ---------------------------------------------------------------------------
+drop policy if exists "reg_admin_select_events" on events;
 create policy "reg_admin_select_events" on events
   for select to authenticated using (public.is_reg_admin());
 
+drop policy if exists "reg_admin_insert_events" on events;
 create policy "reg_admin_insert_events" on events
   for insert to authenticated with check (public.is_reg_admin());
 
+drop policy if exists "reg_admin_update_events" on events;
 create policy "reg_admin_update_events" on events
   for update to authenticated
   using (public.is_reg_admin()) with check (public.is_reg_admin());
 
+drop policy if exists "reg_admin_select_registrations" on event_registrations;
 create policy "reg_admin_select_registrations" on event_registrations
   for select to authenticated using (public.is_reg_admin());
 
+drop policy if exists "reg_admin_update_registrations" on event_registrations;
 create policy "reg_admin_update_registrations" on event_registrations
   for update to authenticated
   using (public.is_reg_admin()) with check (public.is_reg_admin());
 
+drop policy if exists "reg_admin_select_members" on members;
 create policy "reg_admin_select_members" on members
   for select to authenticated using (public.is_reg_admin());
 
+drop policy if exists "reg_admin_read_own_admin_row" on admin_users;
 create policy "reg_admin_read_own_admin_row" on admin_users
   for select to authenticated
   using (lower(email) = lower(coalesce(auth.jwt() ->> 'email', '')));
