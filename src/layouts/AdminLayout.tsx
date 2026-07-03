@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  CalendarDays, 
-  Users, 
-  LogOut, 
-  Menu, 
+import {
+  LayoutDashboard,
+  CalendarDays,
+  Users,
+  LogOut,
+  Menu,
   X,
   ExternalLink,
   Search,
-  Bell
+  Bell,
+  ShieldCheck,
+  FileClock
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -29,6 +31,8 @@ export default function AdminLayout() {
     { name: 'Events', path: '/admin/events', icon: CalendarDays },
     { name: 'Registrations', path: '/admin/registrations', icon: Users },
     { name: 'Members', path: '/admin/members', icon: Users },
+    { name: 'Users & Roles', path: '/admin/users-roles', icon: ShieldCheck },
+    { name: 'Audit Log', path: '/admin/audit-logs', icon: FileClock },
   ];
 
   const isActive = (path: string) => {
@@ -70,13 +74,6 @@ export default function AdminLayout() {
         </nav>
 
         <div className="p-4 border-t border-border space-y-4">
-          <div className="p-4 bg-secondary/30 rounded-2xl border border-secondary/50 text-center">
-            <h4 className="font-bold text-primary mb-2 text-sm">Level Up Your Event System</h4>
-            <p className="text-xs text-text-muted mb-4">Get full access to advanced modules and automated features.</p>
-            <button className="w-full py-2 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primary-light transition-colors">
-              Get Pro Version
-            </button>
-          </div>
           <button
             onClick={handleSignOut}
             className="flex w-full items-center justify-center gap-2 px-4 py-2.5 text-text-muted hover:text-error hover:bg-error/10 rounded-xl transition-colors cursor-pointer font-medium text-sm"

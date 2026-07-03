@@ -1,15 +1,28 @@
 import { useEffect, useState } from 'react';
-import { getAllRegistrations } from '../../lib/api';
+import { getAllRegistrations, getMemberActivitySummary, updateMemberClassification } from '../../lib/api';
+import type { MemberActivity } from '../../lib/api';
 import { Search, User, MapPin, Phone, Calendar, History, ArrowLeft, CheckCircle2, XCircle } from 'lucide-react';
 import { format } from 'date-fns';
 
+const MEMBER_TYPES = ['regular_member', 'new_member', 'visitor', 'volunteer', 'leader', 'guest'];
+const AGE_GROUPS = ['child', 'youth', 'young_adult', 'adult', 'senior', 'prefer_not_to_say'];
+
+const ACTIVITY_COLORS: Record<string, string> = {
+  highly_active: 'bg-[#10B981]/10 text-[#10B981]',
+  active: 'bg-secondary text-primary',
+  occasional: 'bg-accent/10 text-accent',
+  inactive: 'bg-gray-100 text-gray-500',
+};
+
 export default function MembersManager() {
   const [members, setMembers] = useState<any[]>([]);
+  const [activityByMember, setActivityByMember] = useState<Record<string, MemberActivity>>({});
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   // Selected Member State
   const [selectedMember, setSelectedMember] = useState<any | null>(null);
+  const [savingClassification, setSavingClassification] = useState(false);
 
   useEffect(() => {
     fetchMembers();
@@ -18,7 +31,12 @@ export default function MembersManager() {
   const fetchMembers = async () => {
     setLoading(true);
     try {
-      const data = await getAllRegistrations();
+      const [data, activity] = await Promise.all([
+        getAllRegistrations(),
+        getMemberActivitySummary().catch(() => [] as MemberActivity[]),
+      ]);
+
+      setActivityByMember(Object.fromEntries(activity.map((a) => [a.member_id, a])));
 
       // Group registrations by member to form the directory
       const membersMap = new Map();
@@ -32,6 +50,13 @@ export default function MembersManager() {
             full_name: fullName,
             phone: reg.members?.phone ?? '',
             address: reg.members?.address ?? '',
+            member_type: reg.members?.member_type ?? 'regular_member',
+            tags: reg.members?.tags ?? [],
+            ministry_group: reg.members?.ministry_group ?? '',
+            age_group: reg.members?.age_group ?? '',
+            communication_consent: reg.members?.communication_consent ?? true,
+            unsubscribed: reg.members?.unsubscribed ?? false,
+            is_active: reg.members?.is_active ?? true,
             total_events_registered: 0,
             total_events_attended: 0,
             total_events_cancelled: 0,
@@ -65,6 +90,53 @@ export default function MembersManager() {
     }
   };
 
+  const handleClassificationChange = async (memberId: string, updates: Parameters<typeof updateMemberClassification>[1]) => {
+    setSavingClassification(true);
+    try {
+      await updateMemberClassification(memberId, updates);
+      const [data] = await Promise.all([getAllRegistrations()]);
+      const membersMap = new Map();
+      data.forEach((reg) => {
+        const key = reg.member_id;
+        if (!membersMap.has(key)) {
+          membersMap.set(key, {
+            member_id: key,
+            full_name: `${reg.members?.first_name ?? ''} ${reg.members?.surname ?? ''}`.trim() || 'Unknown',
+            phone: reg.members?.phone ?? '',
+            address: reg.members?.address ?? '',
+            member_type: reg.members?.member_type ?? 'regular_member',
+            tags: reg.members?.tags ?? [],
+            ministry_group: reg.members?.ministry_group ?? '',
+            age_group: reg.members?.age_group ?? '',
+            communication_consent: reg.members?.communication_consent ?? true,
+            unsubscribed: reg.members?.unsubscribed ?? false,
+            is_active: reg.members?.is_active ?? true,
+            total_events_registered: 0,
+            total_events_attended: 0,
+            total_events_cancelled: 0,
+            event_history: []
+          });
+        }
+        const member = membersMap.get(key);
+        member.total_events_registered++;
+        if (reg.status === 'attended') member.total_events_attended++;
+        if (reg.status === 'cancelled') member.total_events_cancelled++;
+        member.event_history.push({
+          registration_id: reg.id, event_id: reg.event_id, event_title: reg.events?.title,
+          status: reg.status, registered_at: reg.registered_at, notes: reg.notes
+        });
+      });
+      const membersArray = Array.from(membersMap.values());
+      setMembers(membersArray);
+      setSelectedMember(membersArray.find((m) => m.member_id === memberId) ?? null);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to update member classification.');
+    } finally {
+      setSavingClassification(false);
+    }
+  };
+
   const filteredMembers = members.filter(m => {
     const searchLower = searchTerm.toLowerCase();
     return m.full_name.toLowerCase().includes(searchLower) || (m.phone || '').toLowerCase().includes(searchLower);
@@ -87,7 +159,14 @@ export default function MembersManager() {
                 <User size={32} className="text-secondary" />
               </div>
               <div>
-                <h2 className="text-3xl font-bold">{selectedMember.full_name}</h2>
+                <div className="flex items-center gap-3">
+                  <h2 className="text-3xl font-bold">{selectedMember.full_name}</h2>
+                  {activityByMember[selectedMember.member_id] && (
+                    <span className={`text-[10px] font-bold px-2.5 py-1 uppercase rounded-md ${ACTIVITY_COLORS[activityByMember[selectedMember.member_id].activity_status]}`}>
+                      {activityByMember[selectedMember.member_id].activity_status.replace('_', ' ')} · {activityByMember[selectedMember.member_id].activity_score}pts
+                    </span>
+                  )}
+                </div>
                 <div className="flex gap-4 mt-2 text-white/70 text-sm">
                   {selectedMember.address && (
                     <span className="flex items-center gap-1">
@@ -123,6 +202,70 @@ export default function MembersManager() {
             </div>
           </div>
           
+          <div className="p-8 border-b border-border">
+            <h3 className="text-lg font-bold text-primary mb-4">Classification</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="form-group mb-0">
+                <label className="label">Member Type</label>
+                <select
+                  className="input"
+                  value={selectedMember.member_type}
+                  disabled={savingClassification}
+                  onChange={(e) => handleClassificationChange(selectedMember.member_id, { member_type: e.target.value })}
+                >
+                  {MEMBER_TYPES.map((t) => <option key={t} value={t}>{t.replace('_', ' ')}</option>)}
+                </select>
+              </div>
+              <div className="form-group mb-0">
+                <label className="label">Age Group <span className="text-muted font-normal">(optional)</span></label>
+                <select
+                  className="input"
+                  value={selectedMember.age_group || ''}
+                  disabled={savingClassification}
+                  onChange={(e) => handleClassificationChange(selectedMember.member_id, { age_group: e.target.value || null })}
+                >
+                  <option value="">Not set</option>
+                  {AGE_GROUPS.map((g) => <option key={g} value={g}>{g.replace('_', ' ')}</option>)}
+                </select>
+              </div>
+              <div className="form-group mb-0">
+                <label className="label">Ministry / Group <span className="text-muted font-normal">(optional)</span></label>
+                <input
+                  className="input"
+                  defaultValue={selectedMember.ministry_group || ''}
+                  disabled={savingClassification}
+                  onBlur={(e) => {
+                    if (e.target.value !== (selectedMember.ministry_group || '')) {
+                      handleClassificationChange(selectedMember.member_id, { ministry_group: e.target.value || null });
+                    }
+                  }}
+                />
+              </div>
+              <div className="flex flex-col justify-center gap-2 pt-6">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4 accent-primary"
+                    checked={selectedMember.is_active}
+                    disabled={savingClassification}
+                    onChange={(e) => handleClassificationChange(selectedMember.member_id, { is_active: e.target.checked })}
+                  />
+                  <span className="text-sm text-text">Active member</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4 accent-primary"
+                    checked={selectedMember.communication_consent}
+                    disabled={savingClassification}
+                    onChange={(e) => handleClassificationChange(selectedMember.member_id, { communication_consent: e.target.checked })}
+                  />
+                  <span className="text-sm text-text">Consents to communication</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
           <div className="p-8 bg-gray-50/50">
             <h3 className="text-xl font-bold text-primary mb-6 flex items-center gap-2">
               <History size={20} /> Event History

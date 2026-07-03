@@ -7,6 +7,8 @@ import DashboardOverview from './pages/admin/DashboardOverview';
 import EventsManager from './pages/admin/EventsManager';
 import RegistrationsManager from './pages/admin/RegistrationsManager';
 import MembersManager from './pages/admin/MembersManager';
+import UsersRolesManager from './pages/admin/UsersRolesManager';
+import AuditLogManager from './pages/admin/AuditLogManager';
 import { useAuth } from './contexts/AuthContext';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -51,6 +53,8 @@ function App() {
         <Route path="events" element={<EventsManager />} />
         <Route path="registrations" element={<RegistrationsManager />} />
         <Route path="members" element={<MembersManager />} />
+        <Route path="users-roles" element={<UsersRolesManager />} />
+        <Route path="audit-logs" element={<AuditLogManager />} />
       </Route>
     </Routes>
   );

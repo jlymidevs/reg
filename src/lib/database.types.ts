@@ -13,17 +13,53 @@ export interface Database {
         Row: {
           id: string
           email: string
+          role: string
           created_at: string | null
         }
         Insert: {
           id?: string
           email: string
+          role?: string
           created_at?: string | null
         }
         Update: {
           id?: string
           email?: string
+          role?: string
           created_at?: string | null
+        }
+        Relationships: []
+      }
+      audit_logs: {
+        Row: {
+          id: string
+          actor_email: string | null
+          action_type: string
+          target_type: string
+          target_id: string | null
+          old_value: Json | null
+          new_value: Json | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          actor_email?: string | null
+          action_type: string
+          target_type: string
+          target_id?: string | null
+          old_value?: Json | null
+          new_value?: Json | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          actor_email?: string | null
+          action_type?: string
+          target_type?: string
+          target_id?: string | null
+          old_value?: Json | null
+          new_value?: Json | null
+          created_at?: string
         }
         Relationships: []
       }
@@ -39,6 +75,14 @@ export interface Database {
           email: string | null
           address: string | null
           status: string | null
+          member_type: string
+          tags: string[]
+          ministry_group: string | null
+          age_group: string | null
+          communication_consent: boolean
+          unsubscribed: boolean
+          is_active: boolean
+          archived_at: string | null
           created_at: string
         }
         Insert: {
@@ -52,6 +96,14 @@ export interface Database {
           email?: string | null
           address?: string | null
           status?: string | null
+          member_type?: string
+          tags?: string[]
+          ministry_group?: string | null
+          age_group?: string | null
+          communication_consent?: boolean
+          unsubscribed?: boolean
+          is_active?: boolean
+          archived_at?: string | null
           created_at?: string
         }
         Update: {
@@ -65,6 +117,14 @@ export interface Database {
           email?: string | null
           address?: string | null
           status?: string | null
+          member_type?: string
+          tags?: string[]
+          ministry_group?: string | null
+          age_group?: string | null
+          communication_consent?: boolean
+          unsubscribed?: boolean
+          is_active?: boolean
+          archived_at?: string | null
           created_at?: string
         }
         Relationships: []
@@ -188,7 +248,25 @@ export interface Database {
       }
     }
     Views: {
-      [_ in never]: never
+      member_activity_summary_view: {
+        Row: {
+          member_id: string
+          first_name: string
+          surname: string | null
+          member_type: string
+          ministry_group: string | null
+          attended_90d: number
+          attended_prev_90d: number
+          registrations_90d: number
+          attended_total: number
+          no_show_count: number
+          last_attended_at: string | null
+          activity_score: number
+          activity_status: string
+          trend: string
+        }
+        Relationships: []
+      }
     }
     Functions: {
       register_for_event: {
@@ -199,12 +277,21 @@ export interface Database {
           p_phone: string
           p_address?: string | null
           p_notes?: string | null
+          p_email?: string | null
         }
         Returns: Json
       }
       is_reg_admin: {
         Args: Record<string, never>
         Returns: boolean
+      }
+      is_super_admin: {
+        Args: Record<string, never>
+        Returns: boolean
+      }
+      get_admin_role: {
+        Args: Record<string, never>
+        Returns: string
       }
     }
     Enums: {
