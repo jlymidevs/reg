@@ -32,7 +32,7 @@ export default function PublicLayout() {
               <span className="font-bold">JLYCC REG</span>
             </div>
             
-            <div className="text-blue-200 text-sm text-center md:text-right">
+            <div className="text-white/80 text-sm text-center md:text-right">
               <p>&copy; {new Date().getFullYear()} Event Registration Platform. All rights reserved.</p>
             </div>
           </div>

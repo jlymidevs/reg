@@ -129,9 +129,9 @@ export default function Home() {
         </div>
         
         <div className="container relative z-20 text-center text-white">
-          {nextEvent ? <span className="inline-block py-1 px-3 rounded-full bg-white/10 border border-white/20 text-blue-200 text-sm font-medium mb-6 backdrop-blur-sm">Next Upcoming Event</span> : <span className="inline-block py-1 px-3 rounded-full bg-white/10 border border-white/20 text-blue-200 text-sm font-medium mb-6 backdrop-blur-sm">Join Our Next Gathering</span>}
+          {nextEvent ? <span className="inline-block py-1 px-3 rounded-full bg-white/10 border border-white/20 text-white/80 text-sm font-medium mb-6 backdrop-blur-sm">Next Upcoming Event</span> : <span className="inline-block py-1 px-3 rounded-full bg-white/10 border border-white/20 text-white/80 text-sm font-medium mb-6 backdrop-blur-sm">Join Our Next Gathering</span>}
           {nextEvent ? <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 tracking-tight">{nextEvent.title}</h1> : <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 tracking-tight">Event Registration <span className="text-secondary italic">Platform</span></h1>}
-          <p className="text-lg md:text-xl text-blue-100 max-w-2xl mx-auto mb-10 leading-relaxed">
+          <p className="text-lg md:text-xl text-white/85 max-w-2xl mx-auto mb-10 leading-relaxed">
             Secure your spot at our upcoming events, conferences, and workshops. Discover what's happening and register in seconds.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

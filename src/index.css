@@ -1,6 +1,15 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
+/* Tailwind v4's built-in `container` utility sets fixed per-breakpoint
+   widths but does NOT auto-center or pad (unlike v3) — every className="container"
+   in this codebase relies on centering, so override it here. */
+@utility container {
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+  max-width: 80rem;
+}
+
 /* Map the design tokens into Tailwind's theme so utilities like
    bg-primary, text-muted, border-border, bg-background resolve. */
 @theme {
@@ -12,7 +21,7 @@
   --color-surface: #FFFFFF;
   --color-text: #1E293B;
   --color-muted: #8E9BAE;
-  --color-border: #E8ECEF;
+  --color-border: #D8DEE3;
   --color-error: #EF4444;
   --color-success: #10B981;
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
@@ -29,7 +38,7 @@
   --color-surface: #FFFFFF; /* Warm White */
   --color-text: #1E293B; /* Darker, softer text */
   --color-text-muted: #8E9BAE; /* Distinct light gray for subtext */
-  --color-border: #E8ECEF; /* Very subtle border */
+  --color-border: #D8DEE3; /* Very subtle border */
   --color-error: #EF4444;
   --color-success: #10B981;
 
