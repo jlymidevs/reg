@@ -63,10 +63,18 @@
   --transition-normal: 250ms ease-in-out;
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+/* CRITICAL: this must be inside @layer base. Unlayered CSS always beats
+   layered CSS regardless of specificity (CSS Cascade Layers spec) — Tailwind
+   wraps every generated utility (p-*, m-*, px-*, space-y-*, etc.) in named
+   layers, so an unlayered universal reset here would silently zero out
+   every spacing utility in the entire app, no matter how specific. This was
+   the root cause of most of the "broken spacing" symptoms across the app. */
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
 }
 
 html, body {
