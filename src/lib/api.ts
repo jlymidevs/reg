@@ -13,7 +13,7 @@ export const ADMIN_ROLES = ['super_admin', 'admin', 'event_manager', 'checkin_st
 export type AdminRole = typeof ADMIN_ROLES[number];
 
 export type RegistrationWithRelations = Registration & {
-  members: Pick<Member, 'first_name' | 'surname' | 'phone' | 'address'> | null;
+  members: Pick<Member, 'first_name' | 'surname' | 'phone' | 'address' | 'gender'> | null;
   events: Pick<Event, 'title'> | null;
 };
 
@@ -91,7 +91,7 @@ export async function updateEvent(id: string, updates: Database['public']['Table
 export async function getAllRegistrations(): Promise<RegistrationWithRelations[]> {
   const { data, error } = await supabase
     .from('event_registrations')
-    .select('*, members(first_name, surname, phone, address), events(title)')
+    .select('*, members(first_name, surname, phone, address, gender), events(title)')
     .order('registered_at', { ascending: false });
 
   if (error) throw error;
@@ -198,7 +198,7 @@ export async function getMemberActivitySummary(): Promise<MemberActivity[]> {
 export async function getRegistrationsForEvent(eventId: string): Promise<RegistrationWithRelations[]> {
   const { data, error } = await supabase
     .from('event_registrations')
-    .select('*, members(first_name, surname, phone, address), events(title)')
+    .select('*, members(first_name, surname, phone, address, gender), events(title)')
     .eq('event_id', eventId)
     .order('registered_at', { ascending: true });
 

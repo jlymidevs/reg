@@ -12,6 +12,7 @@ import UsersRolesManager from './pages/admin/UsersRolesManager';
 import AuditLogManager from './pages/admin/AuditLogManager';
 import CheckInManager from './pages/admin/CheckInManager';
 import FeedbackManager from './pages/admin/FeedbackManager';
+import Reports from './pages/admin/Reports';
 import { useAuth } from './contexts/AuthContext';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -58,6 +59,7 @@ function App() {
         <Route path="registrations" element={<RegistrationsManager />} />
         <Route path="check-in" element={<CheckInManager />} />
         <Route path="feedback" element={<FeedbackManager />} />
+        <Route path="reports" element={<Reports />} />
         <Route path="members" element={<MembersManager />} />
         <Route path="users-roles" element={<UsersRolesManager />} />
         <Route path="audit-logs" element={<AuditLogManager />} />

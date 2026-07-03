@@ -13,7 +13,8 @@ import {
   ShieldCheck,
   FileClock,
   UserCheck,
-  MessageSquareHeart
+  MessageSquareHeart,
+  BarChart3
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -35,6 +36,7 @@ export default function AdminLayout() {
     { name: 'Check-in', path: '/admin/check-in', icon: UserCheck },
     { name: 'Feedback', path: '/admin/feedback', icon: MessageSquareHeart },
     { name: 'Members', path: '/admin/members', icon: Users },
+    { name: 'Reports', path: '/admin/reports', icon: BarChart3 },
     { name: 'Users & Roles', path: '/admin/users-roles', icon: ShieldCheck },
     { name: 'Audit Log', path: '/admin/audit-logs', icon: FileClock },
   ];
