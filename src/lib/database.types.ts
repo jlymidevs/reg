@@ -278,6 +278,47 @@ export interface Database {
         }
         Relationships: []
       }
+      check_ins: {
+        Row: {
+          id: string
+          registration_id: string
+          event_id: string
+          member_id: string
+          method: string
+          checked_in_by: string | null
+          checked_in_at: string
+          notes: string | null
+        }
+        Insert: {
+          id?: string
+          registration_id: string
+          event_id: string
+          member_id: string
+          method?: string
+          checked_in_by?: string | null
+          checked_in_at?: string
+          notes?: string | null
+        }
+        Update: {
+          id?: string
+          registration_id?: string
+          event_id?: string
+          member_id?: string
+          method?: string
+          checked_in_by?: string | null
+          checked_in_at?: string
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'check_ins_registration_id_fkey'
+            columns: ['registration_id']
+            isOneToOne: true
+            referencedRelation: 'event_registrations'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Views: {
       member_activity_summary_view: {
@@ -324,6 +365,20 @@ export interface Database {
       get_admin_role: {
         Args: Record<string, never>
         Returns: string
+      }
+      admin_check_in: {
+        Args: {
+          p_registration_id: string
+          p_method?: string
+          p_notes?: string | null
+        }
+        Returns: Json
+      }
+      admin_undo_check_in: {
+        Args: {
+          p_registration_id: string
+        }
+        Returns: boolean
       }
     }
     Enums: {

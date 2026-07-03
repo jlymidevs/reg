@@ -192,3 +192,32 @@ export async function getMemberActivitySummary(): Promise<MemberActivity[]> {
   if (error) throw error;
   return data ?? [];
 }
+
+// --- CHECK-IN (manual search; QR is a fast-follow) ---
+
+export async function getRegistrationsForEvent(eventId: string): Promise<RegistrationWithRelations[]> {
+  const { data, error } = await supabase
+    .from('event_registrations')
+    .select('*, members(first_name, surname, phone, address), events(title)')
+    .eq('event_id', eventId)
+    .order('registered_at', { ascending: true });
+
+  if (error) throw error;
+  return (data ?? []) as RegistrationWithRelations[];
+}
+
+export async function checkInRegistration(registrationId: string, method: 'manual' | 'qr' | 'walk_in' = 'manual', notes?: string) {
+  const { data, error } = await supabase.rpc('admin_check_in', {
+    p_registration_id: registrationId,
+    p_method: method,
+    p_notes: notes ?? null,
+  });
+  if (error) throw error;
+  return data as { ok: boolean; member_name: string; event_title: string; checked_in_at: string };
+}
+
+export async function undoCheckIn(registrationId: string) {
+  const { error } = await supabase.rpc('admin_undo_check_in', { p_registration_id: registrationId });
+  if (error) throw error;
+  return true;
+}

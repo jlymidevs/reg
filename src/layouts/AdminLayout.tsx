@@ -11,7 +11,8 @@ import {
   Search,
   Bell,
   ShieldCheck,
-  FileClock
+  FileClock,
+  UserCheck
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -30,6 +31,7 @@ export default function AdminLayout() {
     { name: 'Overview', path: '/admin', icon: LayoutDashboard },
     { name: 'Events', path: '/admin/events', icon: CalendarDays },
     { name: 'Registrations', path: '/admin/registrations', icon: Users },
+    { name: 'Check-in', path: '/admin/check-in', icon: UserCheck },
     { name: 'Members', path: '/admin/members', icon: Users },
     { name: 'Users & Roles', path: '/admin/users-roles', icon: ShieldCheck },
     { name: 'Audit Log', path: '/admin/audit-logs', icon: FileClock },
