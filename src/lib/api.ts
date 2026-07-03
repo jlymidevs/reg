@@ -31,30 +31,23 @@ export interface RegistrationInput {
   surname: string;
   phone: string;
   address?: string;
-  email?: string;
   notes?: string;
-  turnstile_token?: string;
 }
 
-export async function registerForEvent(input: RegistrationInput): Promise<{ emailSent: boolean }> {
-  // Registration goes through the `register` Edge Function, which verifies
-  // Cloudflare Turnstile server-side, then calls the security-definer RPC
-  // (capacity / past-event / duplicate checks), then sends the confirmation
-  // email. Direct anon access to the RPC is revoked.
-  const { data, error } = await supabase.functions.invoke('register', {
-    body: input,
+export async function registerForEvent(input: RegistrationInput) {
+  // security-definer RPC: enforces capacity, past-event, duplicate and
+  // active checks server-side. Public users cannot read registrations.
+  const { error } = await supabase.rpc('register_for_event', {
+    p_event_id: input.event_id,
+    p_first_name: input.first_name,
+    p_surname: input.surname,
+    p_phone: input.phone,
+    p_address: input.address ?? null,
+    p_notes: input.notes ?? null,
   });
 
-  if (error) {
-    // Edge Function returns {error: message} with 4xx for validation failures
-    const ctx = (error as { context?: Response }).context;
-    if (ctx) {
-      const body = await ctx.json().catch(() => null);
-      if (body?.error) throw new Error(body.error);
-    }
-    throw error;
-  }
-  return { emailSent: Boolean(data?.emailSent) };
+  if (error) throw error;
+  return true;
 }
 
 // --- ADMIN API (requires authenticated admin session) ---

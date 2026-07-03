@@ -3,9 +3,6 @@ import { Calendar, MapPin, Clock, Users, ArrowRight, CheckCircle, Share2 } from 
 import { format } from 'date-fns';
 import { getActiveEvents, registerForEvent } from '../lib/api';
 import type { Event } from '../lib/api';
-import Turnstile from '../components/Turnstile';
-
-const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined;
 
 // Curated event/gathering photos (stable Unsplash IDs — easy to replace later)
 const EVENT_IMAGES = [
@@ -34,14 +31,11 @@ export default function Home() {
     first_name: '',
     surname: '',
     address: '',
-    phone: '',
-    email: ''
+    phone: ''
   });
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const [turnstileToken, setTurnstileToken] = useState('');
 
   useEffect(() => {
     getActiveEvents()
@@ -54,14 +48,11 @@ export default function Home() {
   const handleRegister = (event: Event) => {
     setSelectedEvent(event);
     setSuccess(false);
-    setEmailSent(false);
-    setTurnstileToken('');
     setFormData({
       first_name: '',
       surname: '',
       address: '',
-      phone: '',
-      email: ''
+      phone: ''
     });
   };
 
@@ -73,17 +64,14 @@ export default function Home() {
     setErrorMsg('');
     
     try {
-      const result = await registerForEvent({
+      await registerForEvent({
         event_id: selectedEvent.id,
         first_name: formData.first_name,
         surname: formData.surname,
         address: formData.address,
         phone: formData.phone,
-        email: formData.email || undefined,
-        turnstile_token: turnstileToken || undefined,
       });
-
-      setEmailSent(result.emailSent);
+      
       setSuccess(true);
     } catch (err: any) {
       setErrorMsg(err.message || 'Failed to register. Please try again.');
@@ -247,7 +235,6 @@ export default function Home() {
                   <p className="text-muted mb-8">
                     You have successfully registered for <br/>
                     <span className="font-semibold text-primary">{selectedEvent.title}</span>.
-                    {emailSent && <><br/><span className="text-sm">A confirmation email is on its way to your inbox.</span></>}
                   </p>
                   
                   <div className="bg-gray-50 rounded-xl p-4 text-left text-sm text-text mb-8 border border-border">
@@ -329,32 +316,11 @@ export default function Home() {
                       />
                       <p className="text-xs text-muted mt-1">Format: +639171234567</p>
                     </div>
-
-                    <div className="form-group mb-0">
-                      <label className="label" htmlFor="email">Email <span className="text-muted font-normal">(optional — get a confirmation email)</span></label>
-                      <input
-                        id="email"
-                        type="email"
-                        className="input"
-                        placeholder="you@example.com"
-                        autoComplete="email"
-                        value={formData.email}
-                        onChange={(e) => setFormData({...formData, email: e.target.value})}
-                      />
-                    </div>
-
-                    {TURNSTILE_SITE_KEY && (
-                      <Turnstile
-                        siteKey={TURNSTILE_SITE_KEY}
-                        onVerify={setTurnstileToken}
-                        onExpire={() => setTurnstileToken('')}
-                      />
-                    )}
-
-                    <button
-                      type="submit"
+                    
+                    <button 
+                      type="submit" 
                       className="btn btn-primary w-full mt-6"
-                      disabled={submitting || (!!TURNSTILE_SITE_KEY && !turnstileToken)}
+                      disabled={submitting}
                     >
                       {submitting ? 'Processing...' : (
                         <span className="flex items-center justify-center gap-2">
