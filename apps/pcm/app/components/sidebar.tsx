@@ -7,7 +7,7 @@ import { createClient } from '@jlycc/supabase/client';
 const NAV = [
   { href: '/', label: 'Dashboard', icon: DashboardIcon },
   { href: '/watchlist', label: 'Daily Pulse', icon: WatchlistIcon },
-  { href: '/members', label: 'CRM Pipeline', icon: MembersIcon },
+  { href: '/pipeline', label: 'CRM Pipeline', icon: MembersIcon },
   { href: '/journey-approvals', label: 'D-Journey', icon: ApprovalIcon },
   { href: '/followups', label: 'Tasks & Follow-ups', icon: FollowupIcon },
   { href: '/reports/weekly', label: 'Heartlink Reports', icon: ReportIcon },

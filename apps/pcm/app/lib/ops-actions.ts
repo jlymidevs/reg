@@ -13,6 +13,7 @@ type ActionResult = { ok: true } | { ok: false; error: string };
 const APPROVER_ROLES: RoleCode[] = ['pcm_staff', 'network_head', 'ministry_head', 'admin', 'super_admin'];
 const FOLLOWUP_ROLES: RoleCode[] = ['pcm_staff', 'admin', 'super_admin'];
 const FOLLOWUP_METHODS = ['call', 'text', 'visit', 'prayer', 'online', 'other'] as const;
+const PIPELINE_STATUSES = ['FTV', 'OGV', 'RM', 'AM', 'DROPPED'] as const;
 
 function hasAnyRole(roles: RoleCode[], allowed: RoleCode[]) {
   return roles.some((role) => allowed.includes(role));
@@ -231,6 +232,39 @@ export async function logFollowup(formData: FormData): Promise<ActionResult> {
   revalidatePath('/followups');
   revalidatePath('/watchlist');
   revalidatePath(path);
+  return { ok: true };
+}
+
+export async function requestStatusChange(formData: FormData): Promise<ActionResult> {
+  const auth = await requireOperator(APPROVER_ROLES);
+  if (!auth.ok) return auth;
+
+  const memberId = String(formData.get('memberId') ?? '');
+  const to = String(formData.get('to') ?? '');
+  const reason = String(formData.get('reason') ?? '').trim();
+  const path = String(formData.get('path') ?? '/pipeline');
+
+  if (!memberId || !PIPELINE_STATUSES.includes(to as (typeof PIPELINE_STATUSES)[number])) {
+    return { ok: false, error: 'Invalid pipeline move.' };
+  }
+  if (to === 'DROPPED' && reason.length < 10) {
+    return { ok: false, error: 'Dropped moves require a reason of at least 10 characters.' };
+  }
+
+  const admin = createAdminClient();
+  const { data: member } = await admin.from('members').select('journey_status').eq('id', memberId).maybeSingle();
+  if (!member || member.journey_status === to) return { ok: false, error: 'Member or move not found.' };
+
+  const { error } = await admin.from('approval_requests').insert({
+    request_type: 'member_status_change',
+    member_id: memberId,
+    requested_by: auth.user.id,
+    payload: { from: member.journey_status, to, reason: reason || null },
+  });
+  if (error) return { ok: false, error: 'Unable to submit pipeline move.' };
+
+  revalidatePath(path);
+  revalidatePath('/journey-approvals');
   return { ok: true };
 }
 

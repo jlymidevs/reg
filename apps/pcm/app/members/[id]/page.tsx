@@ -7,6 +7,7 @@ import { requirePcmAccess } from '../../lib/access';
 import { submitApprovalDecision, submitFollowupLog } from '../../lib/ops-actions';
 import type { ApprovalRequestQueryRow, DashboardMemberRow } from '../../lib/pcm-data';
 import { normalizeApprovalRequests } from '../../lib/pcm-data';
+import MemberProfileTabs from './member-profile-tabs';
 
 export const dynamic = 'force-dynamic';
 
@@ -92,6 +93,13 @@ export default async function MemberDetailPage({
   const followupRows = (followups ?? []) as FollowupRow[];
   const historyRows = (history ?? []) as HistoryRow[];
   const approvalRows = normalizeApprovalRequests((approvals ?? []) as ApprovalRequestQueryRow[]);
+  const { data: completedMilestones } = await supabase
+    .from('member_requirement_completions')
+    .select('journey_requirements(code)')
+    .eq('member_id', id);
+  const milestones = (completedMilestones ?? [])
+    .map((row) => (row.journey_requirements as unknown as { code: string } | null)?.code)
+    .filter((code): code is string => Boolean(code));
 
   return (
     <section className="space-y-6">
@@ -99,6 +107,8 @@ export default async function MemberDetailPage({
       {flash.message && (flash.flash === 'success' || flash.flash === 'error') ? (
         <ActionFlash tone={flash.flash} message={flash.message} />
       ) : null}
+
+      <MemberProfileTabs member={detail} followups={followupRows} history={historyRows} milestones={milestones} />
 
       <div className="rounded-3xl border border-teal-100 bg-white p-6 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-4">
