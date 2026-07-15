@@ -153,12 +153,12 @@ export default async function MemberDetailPage({
                   defaultValue="call"
                   className="w-full rounded-xl border border-teal-200 px-3 py-2 outline-none focus:border-teal-400"
                 >
-                  <option value="call">Call</option>
-                  <option value="text">Text</option>
-                  <option value="visit">Visit</option>
-                  <option value="prayer">Prayer</option>
-                  <option value="online">Online</option>
-                  <option value="other">Other</option>
+                  <option value="call">CP — Call</option>
+                  <option value="text">TC — Text</option>
+                  <option value="online">VC — Video Call</option>
+                  <option value="visit">IP — In Person</option>
+                  <option value="prayer">PR — Prayer</option>
+                  <option value="other">OT — Other</option>
                 </select>
               </label>
               <label className="block text-sm">
