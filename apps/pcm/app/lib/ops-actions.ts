@@ -196,14 +196,18 @@ export async function decideApproval(formData: FormData): Promise<ActionResult> 
 
   if (error) return { ok: false, error: 'Unable to save approval decision.' };
 
-  await logAudit(admin, {
-    actorId: auth.user.id,
-    action: decision === 'approved' ? 'approve_request' : 'reject_request',
-    entityType: 'approval_requests',
-    entityId: id,
-    before: { status: request.status },
-    after: { status: decision, note },
-  });
+  try {
+    await logAudit({
+      actorId: auth.user.id,
+      action: decision === 'approved' ? 'approve_request' : 'reject_request',
+      entityType: 'approval_requests',
+      entityId: id,
+      before: { status: request.status },
+      after: { status: decision, note },
+    });
+  } catch (err) {
+    console.error("Audit logging failed:", err);
+  }
 
   revalidatePath('/journey-approvals');
   revalidatePath('/');
@@ -238,13 +242,17 @@ export async function logFollowup(formData: FormData): Promise<ActionResult> {
 
   if (error) return { ok: false, error: 'Unable to log follow-up.' };
 
-  await logAudit(admin, {
-    actorId: auth.user.id,
-    action: 'log_followup',
-    entityType: 'members',
-    entityId: memberId,
-    after: { method, date, notes },
-  });
+  try {
+    await logAudit({
+      actorId: auth.user.id,
+      action: 'log_followup',
+      entityType: 'members',
+      entityId: memberId,
+      after: { method, date, notes },
+    });
+  } catch (err) {
+    console.error("Audit logging failed:", err);
+  }
 
   revalidatePath('/');
   revalidatePath('/followups');
@@ -281,14 +289,18 @@ export async function requestStatusChange(formData: FormData): Promise<ActionRes
   });
   if (error) return { ok: false, error: 'Unable to submit pipeline move.' };
 
-  await logAudit(admin, {
-    actorId: auth.user.id,
-    action: 'request_status_change',
-    entityType: 'members',
-    entityId: memberId,
-    before: { journey_status: member.journey_status },
-    after: { journey_status: to, reason },
-  });
+  try {
+    await logAudit({
+      actorId: auth.user.id,
+      action: 'request_status_change',
+      entityType: 'members',
+      entityId: memberId,
+      before: { journey_status: member.journey_status },
+      after: { journey_status: to, reason },
+    });
+  } catch (err) {
+    console.error("Audit logging failed:", err);
+  }
 
   revalidatePath(path);
   revalidatePath('/journey-approvals');

@@ -1,4 +1,5 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import 'server-only';
+import { createAdminClient } from '@jlycc/supabase/admin';
 
 export type AuditEvent = {
   actorId: string;
@@ -9,12 +10,13 @@ export type AuditEvent = {
   after?: any;
 };
 
-export async function logAudit(supabase: SupabaseClient, event: AuditEvent) {
+export async function logAudit(event: AuditEvent) {
   if (!event.actorId || !event.action || !event.entityType || !event.entityId) {
     throw new Error("Missing required audit fields");
   }
 
-  const { error } = await supabase.from('admin_audit_logs').insert({
+  const admin = createAdminClient();
+  const { error } = await admin.from('admin_audit_logs').insert({
     actor_id: event.actorId,
     action: event.action,
     entity_type: event.entityType,
