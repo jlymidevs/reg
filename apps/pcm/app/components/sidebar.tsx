@@ -8,9 +8,13 @@ const NAV = [
   { href: '/', label: 'Dashboard', icon: DashboardIcon },
   { href: '/watchlist', label: 'Daily Pulse', icon: WatchlistIcon },
   { href: '/pipeline', label: 'CRM Pipeline', icon: MembersIcon },
-  { href: '/journey-approvals', label: 'D-Journey', icon: ApprovalIcon },
+  { href: '/dashboard/djourney', label: 'D-Journey', icon: ApprovalIcon },
   { href: '/followups', label: 'Tasks & Follow-ups', icon: FollowupIcon },
   { href: '/reports/weekly', label: 'Heartlink Reports', icon: ReportIcon },
+  { href: '/dashboard/announcements', label: 'Announcements', icon: AnnouncementIcon },
+  { href: '/dashboard/staff', label: 'Staff & Roles', icon: StaffIcon },
+  { href: '/dashboard/turnover', label: 'Team Turnover', icon: TurnoverIcon },
+  { href: '/dashboard/kra', label: 'KRA Dashboard', icon: KpiIcon },
 ];
 
 export function Sidebar() {
@@ -129,4 +133,16 @@ function ReportIcon({ className }: { className?: string }) {
       <path d="M13 4v5h5M8 13h8M8 17h5" />
     </svg>
   );
+}
+function AnnouncementIcon({ className }: { className?: string }) {
+  return <svg {...iconProps(className)}><path d="M4 11h16M4 11l3-6h10l3 6-3 6H7l-3-6Z" /><path d="M8 17v3M16 17v3" /></svg>;
+}
+function StaffIcon({ className }: { className?: string }) {
+  return <svg {...iconProps(className)}><circle cx="9" cy="8" r="3" /><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M17 11h4M19 9v4" /></svg>;
+}
+function TurnoverIcon({ className }: { className?: string }) {
+  return <svg {...iconProps(className)}><path d="M4 7h13l-3-3M20 17H7l3 3" /><path d="M17 4l3 3-3 3M7 14l-3 3 3 3" /></svg>;
+}
+function KpiIcon({ className }: { className?: string }) {
+  return <svg {...iconProps(className)}><path d="M4 19V5M4 19h16" /><path d="m7 15 3-4 3 2 5-7" /></svg>;
 }
