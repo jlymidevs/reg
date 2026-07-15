@@ -3,14 +3,15 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { createClient } from '@jlycc/supabase/client';
+import { dashboardRoutes } from '../lib/routes';
 
 const NAV = [
-  { href: '/', label: 'Dashboard', icon: DashboardIcon },
-  { href: '/watchlist', label: 'Daily Pulse', icon: WatchlistIcon },
-  { href: '/pipeline', label: 'CRM Pipeline', icon: MembersIcon },
-  { href: '/dashboard/djourney', label: 'D-Journey', icon: ApprovalIcon },
-  { href: '/followups', label: 'Tasks & Follow-ups', icon: FollowupIcon },
-  { href: '/reports/weekly', label: 'Heartlink Reports', icon: ReportIcon },
+  { ...dashboardRoutes.overview, icon: DashboardIcon },
+  { ...dashboardRoutes.pulse, icon: WatchlistIcon },
+  { ...dashboardRoutes.pipeline, icon: MembersIcon },
+  { ...dashboardRoutes.journey, icon: ApprovalIcon },
+  { ...dashboardRoutes.tasks, icon: FollowupIcon },
+  { ...dashboardRoutes.meetings, icon: ReportIcon },
   { href: '/dashboard/announcements', label: 'Announcements', icon: AnnouncementIcon },
   { href: '/dashboard/staff', label: 'Staff & Roles', icon: StaffIcon },
   { href: '/dashboard/turnover', label: 'Team Turnover', icon: TurnoverIcon },
