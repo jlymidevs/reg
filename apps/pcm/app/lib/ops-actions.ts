@@ -7,6 +7,7 @@ import { createAdminClient } from '@jlycc/supabase/admin';
 import { createClient } from '@jlycc/supabase/server';
 import type { RoleCode } from '@jlycc/types';
 import { buildFlashPath } from './flash';
+import { logAudit } from './audit';
 
 type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -195,6 +196,15 @@ export async function decideApproval(formData: FormData): Promise<ActionResult> 
 
   if (error) return { ok: false, error: 'Unable to save approval decision.' };
 
+  await logAudit(admin, {
+    actorId: auth.user.id,
+    action: decision === 'approved' ? 'approve_request' : 'reject_request',
+    entityType: 'approval_requests',
+    entityId: id,
+    before: { status: request.status },
+    after: { status: decision, note },
+  });
+
   revalidatePath('/journey-approvals');
   revalidatePath('/');
   revalidatePath(path);
@@ -227,6 +237,14 @@ export async function logFollowup(formData: FormData): Promise<ActionResult> {
   });
 
   if (error) return { ok: false, error: 'Unable to log follow-up.' };
+
+  await logAudit(admin, {
+    actorId: auth.user.id,
+    action: 'log_followup',
+    entityType: 'members',
+    entityId: memberId,
+    after: { method, date, notes },
+  });
 
   revalidatePath('/');
   revalidatePath('/followups');
@@ -262,6 +280,15 @@ export async function requestStatusChange(formData: FormData): Promise<ActionRes
     payload: { from: member.journey_status, to, reason: reason || null },
   });
   if (error) return { ok: false, error: 'Unable to submit pipeline move.' };
+
+  await logAudit(admin, {
+    actorId: auth.user.id,
+    action: 'request_status_change',
+    entityType: 'members',
+    entityId: memberId,
+    before: { journey_status: member.journey_status },
+    after: { journey_status: to, reason },
+  });
 
   revalidatePath(path);
   revalidatePath('/journey-approvals');
