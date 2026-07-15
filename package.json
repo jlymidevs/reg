@@ -10,6 +10,7 @@
     "typecheck": "pnpm --filter registration typecheck && pnpm --filter pcm typecheck"
   },
   "devDependencies": {
+    "next": "15.5.20",
     "turbo": "^2.5.0",
     "typescript": "^5.8.0"
   }
