@@ -14,7 +14,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
     <>
       <Sidebar />
       <div className="sm:pl-60">
-        <main className="mx-auto max-w-6xl px-4 py-6 sm:px-8">{children}</main>
+        <main className="min-h-screen px-4 py-7 sm:px-8 lg:px-10">{children}</main>
       </div>
     </>
   );

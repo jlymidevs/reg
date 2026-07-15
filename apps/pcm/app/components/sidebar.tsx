@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { createClient } from '@jlycc/supabase/client';
 
 const NAV = [
   { href: '/', label: 'Dashboard', icon: DashboardIcon },
@@ -14,25 +15,31 @@ const NAV = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  async function signOut() {
+    await createClient().auth.signOut();
+    window.location.href = '/login';
+  }
+
   return (
-    <aside className="fixed inset-y-0 left-0 z-20 hidden w-60 flex-col border-r border-teal-100 bg-white px-4 py-6 sm:flex">
-      <div className="mb-8 flex items-center gap-2 px-2">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--pcm-primary)] font-heading text-sm font-bold text-white">
-          PC
+    <aside className="fixed inset-y-0 left-0 z-20 hidden w-60 flex-col border-r border-slate-200 bg-white px-0 py-7 sm:flex">
+      <div className="mb-8 px-4">
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#198f91] font-serif text-xl font-bold text-white shadow-sm">
+          PCM
         </div>
-        <span className="font-heading text-lg font-semibold text-[var(--pcm-text)]">PCM Portal</span>
+        <p className="mt-4 font-serif text-xl font-semibold text-[#176f76]">PCM</p>
+        <p className="mt-1 text-xs uppercase tracking-[0.16em] text-slate-400">D-Journey CRM</p>
       </div>
-      <nav className="flex flex-1 flex-col gap-1">
+      <nav className="flex flex-1 flex-col gap-1 px-2">
         {NAV.map(({ href, label, icon: Icon }) => {
           const active = pathname === href;
           return (
             <Link
               key={href}
               href={href}
-              className={`flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200 ${
+              className={`flex cursor-pointer items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors duration-200 ${
                 active
-                  ? 'bg-[var(--pcm-primary)] text-white'
-                  : 'text-gray-500 hover:bg-teal-50 hover:text-[var(--pcm-text)]'
+                  ? 'bg-[#e2f2f2] text-slate-900'
+                  : 'text-slate-600 hover:bg-[#eef8f7] hover:text-[#176f76]'
               }`}
             >
               <Icon className="h-5 w-5 shrink-0" />
@@ -41,6 +48,20 @@ export function Sidebar() {
           );
         })}
       </nav>
+      <div className="mx-2 mt-5 rounded-2xl bg-[#299496] p-4 text-white">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-teal-50">User role</p>
+        <p className="mt-2 font-serif text-xl">Super Admin</p>
+      </div>
+      <div className="mt-5 flex items-center gap-3 px-5 pb-2">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#299496] font-semibold text-white">AD</div>
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold text-slate-900">JLYMI Admin</p>
+          <p className="truncate text-xs text-[#20aaa0]">jlymi.devs@gmail.com</p>
+        </div>
+      </div>
+      <button onClick={() => void signOut()} className="mt-5 flex items-center gap-3 px-5 text-sm font-semibold text-[#a5cf39] hover:text-[#79a817]">
+        <span className="text-lg">↪</span> Sign Out
+      </button>
     </aside>
   );
 }

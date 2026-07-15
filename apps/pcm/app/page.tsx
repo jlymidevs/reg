@@ -1,231 +1,111 @@
 import Link from 'next/link';
-import { redirect } from 'next/navigation';
 import { createClient } from '@jlycc/supabase/server';
-import { Topbar } from './components/topbar';
 import { loadDashboardSnapshot } from './lib/pcm-data';
 import { requirePcmAccess } from './lib/access';
 
 export const dynamic = 'force-dynamic';
 
-const QUICK_LINKS = [
-  { href: '/members', title: 'Members', blurb: 'Search member records and care notes.' },
-  { href: '/watchlist', title: 'Watchlist', blurb: 'Track members needing closer follow-up.' },
-  {
-    href: '/journey-approvals',
-    title: 'Journey Approvals',
-    blurb: 'Review discipleship milestones and requests.',
-  },
-  { href: '/followups', title: 'Follow-ups', blurb: 'Manage callbacks, visits, and prayer care.' },
-];
-
 export default async function HomePage() {
   const supabase = await createClient();
   const { user, roles } = await requirePcmAccess(supabase);
   const snapshot = await loadDashboardSnapshot(supabase, roles, user.email);
-  const statusCards = [
-    {
-      label: 'Members Needing Follow-up',
-      value: String(snapshot.watchlistCount),
-      tone: 'border-amber-200 bg-amber-50 text-amber-900',
-      note: `${snapshot.inactiveCount} marked inactive for 30+ days.`,
-    },
-    {
-      label: 'Pending Journey Approvals',
-      value: String(snapshot.pendingApprovalsCount),
-      tone: 'border-sky-200 bg-sky-50 text-sky-900',
-      note: 'Pending requests visible to your current role scope.',
-    },
-    {
-      label: 'Members In View',
-      value: String(snapshot.membersCount),
-      tone: 'border-emerald-200 bg-emerald-50 text-emerald-900',
-      note: 'Top member list shown below. Full list in Members.',
-    },
-  ];
+  const roleLabel = roles.includes('super_admin') ? 'Super Admin' : roles[0]?.replaceAll('_', ' ') ?? 'PCM Staff';
+  const pipeline = ['FTV', 'OGV', 'RM', 'AM'].map((status) => ({
+    status,
+    count: snapshot.members.filter((member) => member.journey_status === status).length,
+  }));
+  const tasks = snapshot.watchlist.slice(0, 2).map((member, index) => ({
+    id: member.member_id,
+    name: member.name,
+    type: index === 0 ? 'CP' : 'IP',
+    detail: index === 0 ? 'Check how their first Sunday service was.' : 'Meet to discuss D-Journey.',
+    status: member.watch_level === 'inactive' ? 'OVERDUE' : 'PENDING',
+  }));
 
   return (
-    <div className="space-y-6">
-      <Topbar title="PCM Dashboard" />
-
-      <section className="rounded-3xl bg-gradient-to-r from-[var(--pcm-primary)] to-[var(--pcm-primary-light)] px-6 py-7 text-white shadow-sm">
-        <p className="text-sm font-medium uppercase tracking-[0.24em] text-teal-50">Pastoral Care Ministry</p>
-        <h2 className="mt-2 font-heading text-3xl font-semibold">Care team workspace is live.</h2>
-        <p className="mt-3 max-w-3xl text-sm text-teal-50 sm:text-base">
-          Authentication, routing, and core PCM dashboard data are live from Supabase. Next build-out can
-          extend this into editing, approvals, and richer care workflows.
-        </p>
-        <div className="mt-5 flex flex-wrap gap-2 text-sm">
-          {roles.length > 0 ? (
-            roles.map((role) => (
-              <span key={role} className="rounded-full bg-white/15 px-3 py-1 font-medium text-white">
-                {role.replaceAll('_', ' ')}
-              </span>
-            ))
-          ) : (
-            <span className="rounded-full bg-white/15 px-3 py-1 font-medium text-white">
-              No active ministry roles found
-            </span>
-          )}
+    <div className="mx-auto max-w-[1120px] space-y-6">
+      <header className="flex items-end justify-between gap-4">
+        <div>
+          <h1 className="font-serif text-3xl text-[#147f84] sm:text-4xl">Dashboard Overview</h1>
+          <p className="mt-1 text-sm font-medium text-[#22b8a4]">Here is what is happening today.</p>
         </div>
+        <span className="hidden rounded-full bg-white px-4 py-2 text-xs font-semibold uppercase tracking-wider text-slate-400 shadow-sm sm:block">
+          {roleLabel}
+        </span>
+      </header>
+
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <MetricCard label="Active Members" value={snapshot.membersCount} icon="♧" />
+        <MetricCard label="First-Time Visitors" value={snapshot.weeklyKpi?.ftv_to_ogv ?? 0} icon="♧" />
+        <MetricCard label="Connected" value={snapshot.weeklyKpi?.heartlink_assignments ?? 0} icon="✓" />
+        <MetricCard label="Pending Tasks" value={snapshot.pendingApprovalsCount + snapshot.watchlistCount} icon="◷" accent />
       </section>
 
-      <section className="grid gap-4 md:grid-cols-3">
-        {statusCards.map((card) => (
-          <article key={card.label} className={`rounded-2xl border p-5 shadow-sm ${card.tone}`}>
-            <p className="text-sm font-medium">{card.label}</p>
-            <p className="mt-3 font-heading text-4xl font-semibold">{card.value}</p>
-            <p className="mt-3 text-sm opacity-80">{card.note}</p>
-          </article>
-        ))}
-      </section>
-
-      <section className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="rounded-3xl border border-teal-100 bg-white p-6 shadow-sm">
-          <div className="flex items-center justify-between gap-3">
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_2px_5px_rgba(15,23,42,0.06)]">
+          <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-heading text-xl font-semibold text-[var(--pcm-text)]">Watchlist now</h2>
-              <p className="mt-1 text-sm text-gray-500">Members with 14+ days of inactivity.</p>
+              <h2 className="font-serif text-xl text-[#167f84]">Today&apos;s Tasks</h2>
+              <p className="mt-1 text-sm text-slate-400">Your pending tasks and follow-ups for today.</p>
             </div>
+            <Link href="/followups" className="text-xs font-semibold text-[#168e91] hover:underline">View all</Link>
           </div>
           <div className="mt-5 space-y-3">
-            {snapshot.watchlist.length === 0 ? (
-              <EmptyState text="No members are currently on the inactivity watchlist." />
-            ) : (
-              snapshot.watchlist.map((member) => (
-                <div key={member.member_id} className="rounded-2xl border border-teal-100 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <Link href={`/members/${member.member_id}`} className="font-semibold text-[var(--pcm-text)] underline-offset-2 hover:underline">
-                        {member.name}
-                      </Link>
-                      <p className="text-sm text-gray-500">
-                        {member.member_code ?? 'No code'} · {member.journey_status ?? 'No status'}
-                      </p>
-                    </div>
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
-                        member.watch_level === 'inactive'
-                          ? 'bg-rose-100 text-rose-700'
-                          : 'bg-amber-100 text-amber-700'
-                      }`}
-                    >
-                      {member.watch_level}
-                    </span>
-                  </div>
-                  <p className="mt-3 text-sm text-gray-600">
-                    {member.days_inactive} days inactive. Last activity:{' '}
-                    {formatDate(member.last_activity_on) ?? 'No activity recorded'}.
-                  </p>
+            {tasks.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-400">No tasks today.</div>
+            ) : tasks.map((task) => (
+              <Link href={`/members/${task.id}`} key={task.id} className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 px-4 py-4 transition hover:border-[#62b9b6] hover:bg-[#f8fcfc]">
+                <div className="min-w-0">
+                  <p className="font-semibold text-slate-800">{task.name}</p>
+                  <p className="mt-1 text-sm text-[#22b8a4]"><span className="font-semibold">{task.type}</span> • {task.detail}</p>
                 </div>
-              ))
-            )}
+                <span className={`shrink-0 rounded-full px-3 py-1 text-[10px] font-bold tracking-wide ${task.status === 'OVERDUE' ? 'bg-rose-100 text-rose-500' : 'bg-[#e5f4f3] text-[#188d90]'}`}>{task.status}</span>
+              </Link>
+            ))}
           </div>
         </div>
 
-        <div className="rounded-3xl border border-teal-100 bg-white p-6 shadow-sm">
-          <h2 className="font-heading text-xl font-semibold text-[var(--pcm-text)]">This week</h2>
-          <p className="mt-1 text-sm text-gray-500">Current PCM weekly KPI snapshot.</p>
-          {snapshot.weeklyKpi ? (
-            <div className="mt-5 grid grid-cols-2 gap-3">
-              <StatChip label="Follow-ups" value={snapshot.weeklyKpi.followups_completed} />
-              <StatChip label="Attendance" value={snapshot.weeklyKpi.attendance_this_week} />
-              <StatChip label="Recovered" value={snapshot.weeklyKpi.inactive_recovered} />
-              <StatChip label="Requirements" value={snapshot.weeklyKpi.requirements_completed} />
+        <div className="rounded-2xl bg-[#299496] p-6 text-white shadow-[0_2px_5px_rgba(15,23,42,0.06)]">
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h2 className="font-serif text-xl">D-Journey Pipeline</h2>
+              <p className="mt-1 text-xs text-teal-100">Members by current journey status</p>
             </div>
-          ) : (
-            <div className="mt-5">
-              <EmptyState text="No weekly KPI row is visible for this account yet." />
-            </div>
-          )}
+            <Link href="/members" className="text-xs font-semibold text-teal-50 hover:underline">Details</Link>
+          </div>
+          <div className="space-y-5">
+            {pipeline.map((item) => (
+              <div key={item.status}>
+                <div className="flex items-center justify-between text-sm font-semibold"><span>{item.status} <span className="font-normal text-teal-100">({pipelineLabel(item.status)})</span></span><span>{item.count}</span></div>
+                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/20"><div className="h-full rounded-full bg-[#8bd5cd]" style={{ width: `${Math.min(100, Math.max(8, item.count * 10))}%` }} /></div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
-      <section className="rounded-3xl border border-teal-100 bg-white p-6 shadow-sm">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h2 className="font-heading text-xl font-semibold text-[var(--pcm-text)]">Quick links</h2>
-            <p className="mt-1 text-sm text-gray-500">
-              Placeholder routes ready for feature pages and access control.
-            </p>
-          </div>
-        </div>
-        <div className="mt-5 grid gap-4 md:grid-cols-2">
-          {QUICK_LINKS.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              className="rounded-2xl border border-teal-100 bg-teal-50/50 p-5 transition-colors duration-200 hover:border-teal-300 hover:bg-teal-50"
-            >
-              <h3 className="font-heading text-lg font-semibold text-[var(--pcm-text)]">{link.title}</h3>
-              <p className="mt-2 text-sm text-gray-600">{link.blurb}</p>
-            </a>
-          ))}
-        </div>
-      </section>
-
-      <section className="grid gap-5 lg:grid-cols-2">
-        <div className="rounded-3xl border border-teal-100 bg-white p-6 shadow-sm">
-          <h2 className="font-heading text-xl font-semibold text-[var(--pcm-text)]">Member snapshot</h2>
-          <div className="mt-5 space-y-3">
-            {snapshot.members.length === 0 ? (
-              <EmptyState text="No members are visible to this account yet." />
-            ) : (
-              snapshot.members.map((member) => (
-                <div key={member.member_id} className="rounded-2xl border border-teal-100 p-4">
-                  <Link href={`/members/${member.member_id}`} className="font-semibold text-[var(--pcm-text)] underline-offset-2 hover:underline">
-                    {member.name}
-                  </Link>
-                  <p className="text-sm text-gray-500">
-                    {member.member_code ?? 'No code'} · {member.current_stage_name ?? 'No stage'} ·{' '}
-                    {member.journey_status ?? 'No status'}
-                  </p>
-                  <p className="mt-2 text-sm text-gray-600">
-                    Last activity: {formatDate(member.last_activity_on) ?? 'No activity recorded'}.
-                  </p>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        <div className="rounded-3xl border border-teal-100 bg-white p-6 shadow-sm">
-          <h2 className="font-heading text-xl font-semibold text-[var(--pcm-text)]">Pending approvals</h2>
-          <div className="mt-5 space-y-3">
-            {snapshot.approvals.length === 0 ? (
-              <EmptyState text="No pending approvals are visible right now." />
-            ) : (
-              snapshot.approvals.map((request) => (
-                <div key={request.id} className="rounded-2xl border border-teal-100 p-4">
-                  <p className="font-semibold capitalize text-[var(--pcm-text)]">
-                    {request.request_type.replaceAll('_', ' ')}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {request.members?.name ?? 'No member linked'} · {formatDate(request.created_at) ?? 'Unknown date'}
-                  </p>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
+      <section className="grid gap-4 sm:grid-cols-3">
+        <QuickCard href="/members" title="Members" detail={`${snapshot.membersCount} visible member records`} />
+        <QuickCard href="/watchlist" title="Daily Pulse" detail={`${snapshot.watchlistCount} members need attention`} />
+        <QuickCard href="/reports/weekly" title="Heartlink Reports" detail="Review ministry health and progress" />
       </section>
     </div>
   );
 }
 
-function StatChip({ label, value }: { label: string; value: number }) {
+function MetricCard({ label, value, icon, accent = false }: { label: string; value: number; icon: string; accent?: boolean }) {
   return (
-    <div className="rounded-2xl border border-teal-100 bg-teal-50/60 p-4">
-      <p className="text-sm text-gray-500">{label}</p>
-      <p className="mt-2 font-heading text-2xl font-semibold text-[var(--pcm-text)]">{value}</p>
-    </div>
+    <article className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white px-5 py-5 shadow-[0_2px_5px_rgba(15,23,42,0.06)]">
+      <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-xl ${accent ? 'bg-[#148486] text-[#d8f153]' : 'bg-[#e6f4f3] text-[#138d91]'}`}>{icon}</div>
+      <div><p className="text-[11px] font-bold uppercase tracking-wide text-[#2bb69f]">{label}</p><p className="mt-1 font-serif text-2xl text-[#16858a]">{value}</p></div>
+    </article>
   );
 }
 
-function EmptyState({ text }: { text: string }) {
-  return <div className="rounded-2xl border border-dashed border-teal-200 p-4 text-sm text-gray-500">{text}</div>;
+function QuickCard({ href, title, detail }: { href: string; title: string; detail: string }) {
+  return <Link href={href} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-[#61b8b4]"><p className="font-serif text-lg text-[#167f84]">{title}</p><p className="mt-1 text-sm text-slate-400">{detail}</p></Link>;
 }
 
-function formatDate(value: string | null) {
-  if (!value) return null;
-  return new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(new Date(value));
+function pipelineLabel(status: string) {
+  return ({ FTV: 'First-Time Visitor', OGV: 'Ongoing Visitor', RM: 'Regular Member', AM: 'Active Member' } as Record<string, string>)[status] ?? status;
 }
