@@ -5,10 +5,10 @@
   "scripts": {
     "dev": "next dev --port 3006",
     "build": "next build",
-    "lint": "next typegen && tsc --noEmit",
+    "lint": "tsc --noEmit -p tsconfig.typecheck.json",
     "start": "next start",
     "test": "vitest run",
-    "typecheck": "next typegen && tsc --noEmit"
+    "typecheck": "tsc --noEmit -p tsconfig.typecheck.json"
   },
   "dependencies": {
     "@jlycc/permissions": "workspace:*",

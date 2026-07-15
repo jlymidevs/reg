@@ -6,7 +6,8 @@
     "./client": "./src/client.ts",
     "./server": "./src/server.ts",
     "./middleware": "./src/middleware.ts",
-    "./admin": "./src/admin.ts"
+    "./admin": "./src/admin.ts",
+    "./redirect": "./src/redirect.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",

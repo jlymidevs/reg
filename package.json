@@ -6,7 +6,8 @@
     "dev": "turbo dev",
     "build": "turbo build",
     "lint": "turbo lint",
-    "typecheck": "turbo typecheck"
+    "test": "pnpm --filter registration test && pnpm --filter pcm test",
+    "typecheck": "pnpm --filter registration typecheck && pnpm --filter pcm typecheck"
   },
   "devDependencies": {
     "turbo": "^2.5.0",
