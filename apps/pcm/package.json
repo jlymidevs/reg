@@ -1,9 +1,9 @@
 {
-  "name": "registration",
+  "name": "pcm",
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 3005",
+    "dev": "next dev --port 3006",
     "build": "next build",
     "lint": "next typegen && tsc --noEmit",
     "start": "next start",
@@ -11,7 +11,6 @@
     "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
-    "@hookform/resolvers": "^5.4.0",
     "@jlycc/permissions": "workspace:*",
     "@jlycc/supabase": "workspace:*",
     "@jlycc/types": "workspace:*",
@@ -19,9 +18,7 @@
     "@supabase/supabase-js": "^2.49.0",
     "next": "^15.3.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "react-hook-form": "^7.80.0",
-    "zod": "^4.4.3"
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.0",

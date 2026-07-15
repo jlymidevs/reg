@@ -9,3 +9,5 @@ dist/
 *.tsbuildinfo
 .superpowers/
 .worktrees/
+.playwright-cli/
+output/

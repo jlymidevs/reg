@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+:root {
+  --pcm-primary: #0f766e;
+  --pcm-primary-light: #14b8a6;
+  --pcm-bg: #f0fdfa;
+  --pcm-text: #134e4a;
+  --pcm-ok: #22c55e;
+  --pcm-watch: #f59e0b;
+  --pcm-inactive: #ef4444;
+}
+
+body {
+  background: var(--pcm-bg);
+  font-family: var(--font-body), sans-serif;
+}
+
+h1, h2, h3, .font-heading {
+  font-family: var(--font-heading), sans-serif;
+}
