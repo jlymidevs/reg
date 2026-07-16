@@ -13,8 +13,30 @@ create table if not exists public.members (
   email text,
   phone text,
   birth_date date,
+  name text,
+  assigned_pcm uuid,
+  entry_date date,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
+);
+
+create table if not exists public.pcm_staff (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  email text not null,
+  status text not null default 'active',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.member_field_history (
+  id uuid primary key default gen_random_uuid(),
+  member_id uuid not null references public.members(id) on delete cascade,
+  field text not null,
+  old_value text,
+  new_value text,
+  changed_by uuid references auth.users(id) on delete set null,
+  changed_at timestamptz not null default now()
 );
 
 -- These tables are legacy sources referenced by later hardening/report migrations.
