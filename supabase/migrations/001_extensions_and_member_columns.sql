@@ -16,6 +16,16 @@ create table if not exists public.members (
   name text,
   assigned_pcm uuid,
   entry_date date,
+  number integer,
+  status text,
+  status_in_church text,
+  djourney text,
+  heartlink text,
+  ministry_involvement text,
+  water_baptism date,
+  transformation_weekend text,
+  membership_orientation text,
+  is_active boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
