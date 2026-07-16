@@ -14,8 +14,8 @@ type AttendanceRow = {
   checked_in_at: string;
   method: string;
   notes: string | null;
-  members: { name: string | null; member_code: string | null }[] | null;
-  events: { title: string | null }[] | null;
+  members: { name: string | null; member_code: string | null } | null;
+  events: { title: string | null } | null;
 };
 
 export const dynamic = 'force-dynamic';
@@ -32,9 +32,10 @@ export default async function AttendancePage({ searchParams }: AttendancePagePro
     .from('attendance_logs')
     .select('id,checked_in_at,method,notes,members(name,member_code),events(title)')
     .order('checked_in_at', { ascending: false })
-    .range(from, from + PAGE_SIZE - 1);
+    .range(from, from + PAGE_SIZE - 1)
+    .overrideTypes<AttendanceRow[], { merge: false }>();
 
-  const logs = (data ?? []) as AttendanceRow[];
+  const logs = data ?? [];
   const hasNextPage = logs.length === PAGE_SIZE;
 
   return (
@@ -63,10 +64,10 @@ export default async function AttendancePage({ searchParams }: AttendancePagePro
                   <tr key={log.id} className="border-b border-teal-50 last:border-b-0">
                     <td className="px-3 py-3 text-gray-600">{new Date(log.checked_in_at).toLocaleString()}</td>
                     <td className="px-3 py-3">
-                      <p className="font-medium text-[var(--pcm-text)]">{log.members?.[0]?.name ?? 'Member unavailable'}</p>
-                      <p className="text-gray-500">{log.members?.[0]?.member_code ?? 'No code'}</p>
+                      <p className="font-medium text-[var(--pcm-text)]">{log.members?.name ?? 'Member unavailable'}</p>
+                      <p className="text-gray-500">{log.members?.member_code ?? 'No code'}</p>
                     </td>
-                    <td className="px-3 py-3 text-gray-600">{log.events?.[0]?.title ?? 'Event unavailable'}</td>
+                    <td className="px-3 py-3 text-gray-600">{log.events?.title ?? 'Event unavailable'}</td>
                     <td className="px-3 py-3 capitalize text-gray-600">{log.method}</td>
                   </tr>
                 ))}
