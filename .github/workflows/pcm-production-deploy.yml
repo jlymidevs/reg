@@ -68,7 +68,10 @@ jobs:
           pnpm dlx vercel@55.0.0 link --yes --scope "$VERCEL_ORG_ID" --project "$VERCEL_PROJECT_ID" --token "$VERCEL_TOKEN"
           pnpm dlx vercel@55.0.0 pull --yes --environment=production --token "$VERCEL_TOKEN"
           pnpm dlx vercel@55.0.0 build --prod --token "$VERCEL_TOKEN"
-          pnpm dlx vercel@55.0.0 deploy --prebuilt --prod --token "$VERCEL_TOKEN"
+          deployment_output="$(pnpm dlx vercel@55.0.0 deploy --prebuilt --prod --token "$VERCEL_TOKEN" 2>&1 | tee /tmp/pcm-vercel-deploy.log)"
+          deployment_url="$(printf '%s\n' "$deployment_output" | grep -Eo 'https://pcm-[^[:space:]]+\.vercel\.app' | tail -n 1)"
+          test -n "$deployment_url"
+          pnpm dlx vercel@55.0.0 alias set "$deployment_url" pcm.jlycc.org --token "$VERCEL_TOKEN"
 
       - name: Verify production response
         run: |
