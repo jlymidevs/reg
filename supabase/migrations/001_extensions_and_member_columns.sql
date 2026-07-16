@@ -49,6 +49,12 @@ create table if not exists public.member_field_history (
   changed_at timestamptz not null default now()
 );
 
+create table if not exists public.admin_users (
+  id uuid primary key default gen_random_uuid(),
+  email text not null unique,
+  created_at timestamptz not null default now()
+);
+
 -- These tables are legacy sources referenced by later hardening/report migrations.
 -- Create only when absent; existing production tables are extended in place.
 create table if not exists public.offerings (
