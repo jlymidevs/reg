@@ -7,6 +7,7 @@
     "build": "turbo build",
     "lint": "turbo lint",
     "test": "pnpm --filter registration test && pnpm --filter pcm test",
+    "test:db": "supabase test db --local supabase/tests/database/pcm_care_write_hardening.test.sql",
     "typecheck": "pnpm --filter registration typecheck && pnpm --filter pcm typecheck"
   },
   "devDependencies": {

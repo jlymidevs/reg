@@ -140,7 +140,7 @@ describe('PCM RPC-only care write migration', () => {
       'utf8'
     );
 
-    expect(test).toMatch(/select plan\(17\);/i);
+    expect(test).toMatch(/select plan\(30\);/i);
     expect(test).toMatch(/insert into auth\.users/i);
     expect(test).not.toMatch(/session_replication_role/i);
   });

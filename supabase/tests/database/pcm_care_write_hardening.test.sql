@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = extensions, public, pg_catalog;
 
-select plan(17);
+select plan(30);
 
 -- This transaction-local Auth user satisfies the real audit and role foreign keys.
 insert into auth.users (
@@ -37,22 +37,56 @@ values (
   '',
   now(),
   now()
+),
+(
+  '00000000-0000-0000-0000-000000000119'::uuid,
+  'authenticated',
+  'authenticated',
+  'pgtap-scoped@example.test',
+  'not-used-by-pgtap',
+  now(),
+  '{}'::jsonb,
+  '{}'::jsonb,
+  '',
+  '',
+  '',
+  '',
+  now(),
+  now()
 );
 
 insert into public.roles (code, name)
-values ('admin', 'Administrator')
+values
+  ('admin', 'Administrator'),
+  ('pcm_staff', 'PCM Staff')
 on conflict (code) do nothing;
 
 insert into public.user_roles (user_id, role_id)
-select '00000000-0000-0000-0000-000000000111'::uuid, id
-from public.roles
-where code = 'admin';
+select fixture.user_id, r.id
+from (
+  values
+    ('00000000-0000-0000-0000-000000000111'::uuid, 'admin'),
+    ('00000000-0000-0000-0000-000000000119'::uuid, 'pcm_staff')
+) as fixture(user_id, role_code)
+join public.roles r on r.code = fixture.role_code;
 
 insert into public.pcm_staff (id, name, email, status)
 values (
   '00000000-0000-0000-0000-000000000112'::uuid,
   'pgTAP PCM Staff',
   'pgtap-pcm@example.test',
+  'active'
+),
+(
+  '00000000-0000-0000-0000-000000000120'::uuid,
+  'pgTAP Scoped PCM Staff',
+  'pgtap-scoped@example.test',
+  'active'
+),
+(
+  '00000000-0000-0000-0000-000000000121'::uuid,
+  'pgTAP Foreign PCM Staff',
+  'pgtap-foreign@example.test',
   'active'
 );
 
@@ -61,6 +95,12 @@ values (
   '00000000-0000-0000-0000-000000000113'::uuid,
   'pgtap-member@example.test',
   '00000000-0000-0000-0000-000000000112'::uuid,
+  'FTV'
+),
+(
+  '00000000-0000-0000-0000-000000000122'::uuid,
+  'pgtap-foreign-member@example.test',
+  '00000000-0000-0000-0000-000000000121'::uuid,
   'FTV'
 );
 
@@ -103,6 +143,20 @@ values
     '00000000-0000-0000-0000-000000000113'::uuid,
     '00000000-0000-0000-0000-000000000111'::uuid,
     '{"from":"FTV","to":"OGV"}'::jsonb
+  ),
+  (
+    '00000000-0000-0000-0000-000000000123'::uuid,
+    'member_status_change',
+    '00000000-0000-0000-0000-000000000122'::uuid,
+    '00000000-0000-0000-0000-000000000111'::uuid,
+    '{"from":"FTV","to":"OGV"}'::jsonb
+  ),
+  (
+    '00000000-0000-0000-0000-000000000124'::uuid,
+    'member_status_change',
+    '00000000-0000-0000-0000-000000000113'::uuid,
+    '00000000-0000-0000-0000-000000000111'::uuid,
+    '{"from":"FTV","to":"DROPPED"}'::jsonb
   );
 
 insert into public.member_journey_progress (member_id, stage_id, status)
@@ -125,6 +179,50 @@ values (
   current_date,
   'call',
   'pgTAP fixture'
+);
+
+insert into public.networks (id, code, name)
+values (
+  '00000000-0000-0000-0000-000000000125'::uuid,
+  'PGTAP_CARE_WRITE_NETWORK',
+  'pgTAP Care Write Network'
+);
+
+insert into public.ministries (id, network_id, code, name)
+values (
+  '00000000-0000-0000-0000-000000000126'::uuid,
+  '00000000-0000-0000-0000-000000000125'::uuid,
+  'PGTAP_CARE_WRITE_MINISTRY',
+  'pgTAP Care Write Ministry'
+);
+
+insert into public.heartlinks (id, name, network_id)
+values (
+  '00000000-0000-0000-0000-000000000127'::uuid,
+  'pgTAP Care Write HeartLink',
+  '00000000-0000-0000-0000-000000000125'::uuid
+);
+
+insert into public.member_ministries (member_id, ministry_id, assigned_by)
+values (
+  '00000000-0000-0000-0000-000000000113'::uuid,
+  '00000000-0000-0000-0000-000000000126'::uuid,
+  '00000000-0000-0000-0000-000000000111'::uuid
+);
+
+insert into public.member_heartlinks (member_id, heartlink_id, assigned_by)
+values (
+  '00000000-0000-0000-0000-000000000113'::uuid,
+  '00000000-0000-0000-0000-000000000127'::uuid,
+  '00000000-0000-0000-0000-000000000111'::uuid
+);
+
+insert into public.journey_certificates (member_id, stage_id, title, issued_by)
+values (
+  '00000000-0000-0000-0000-000000000113'::uuid,
+  '00000000-0000-0000-0000-000000000114'::uuid,
+  'pgTAP Care Write Certificate',
+  '00000000-0000-0000-0000-000000000111'::uuid
 );
 
 set local role authenticated;
@@ -200,6 +298,78 @@ select throws_ok(
 );
 
 select throws_ok(
+  $$insert into public.member_ministries (member_id, ministry_id) values ('00000000-0000-0000-0000-000000000113', '00000000-0000-0000-0000-000000000126')$$,
+  '42501',
+  'permission denied for table member_ministries',
+  'direct ministry assignment insert is denied'
+);
+
+select throws_ok(
+  $$update public.member_ministries set notes = 'bypass' where member_id = '00000000-0000-0000-0000-000000000113'$$,
+  '42501',
+  'permission denied for table member_ministries',
+  'direct ministry assignment update is denied'
+);
+
+select throws_ok(
+  $$insert into public.member_heartlinks (member_id, heartlink_id) values ('00000000-0000-0000-0000-000000000113', '00000000-0000-0000-0000-000000000127')$$,
+  '42501',
+  'permission denied for table member_heartlinks',
+  'direct HeartLink assignment insert is denied'
+);
+
+select throws_ok(
+  $$update public.member_heartlinks set notes = 'bypass' where member_id = '00000000-0000-0000-0000-000000000113'$$,
+  '42501',
+  'permission denied for table member_heartlinks',
+  'direct HeartLink assignment update is denied'
+);
+
+select throws_ok(
+  $$insert into public.journey_certificates (member_id, title) values ('00000000-0000-0000-0000-000000000113', 'bypass')$$,
+  '42501',
+  'permission denied for table journey_certificates',
+  'direct journey certificate insert is denied'
+);
+
+select throws_ok(
+  $$update public.journey_certificates set title = 'bypass' where member_id = '00000000-0000-0000-0000-000000000113'$$,
+  '42501',
+  'permission denied for table journey_certificates',
+  'direct journey certificate update is denied'
+);
+
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000119', true);
+select set_config('request.jwt.claim.email', 'pgtap-scoped@example.test', true);
+select set_config(
+  'request.jwt.claims',
+  '{"sub":"00000000-0000-0000-0000-000000000119","email":"pgtap-scoped@example.test","role":"authenticated"}',
+  true
+);
+
+select throws_ok(
+  $$select public.pcm_decide_approval('00000000-0000-0000-0000-000000000123', 'approved', null)$$,
+  'P0002',
+  'approval unavailable',
+  'foreign approval is unavailable without member scope'
+);
+
+select throws_ok(
+  $$select public.pcm_decide_approval('00000000-0000-0000-0000-000000000999', 'approved', null)$$,
+  'P0002',
+  'approval unavailable',
+  'missing approval is unavailable without revealing existence'
+);
+
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000111', true);
+select set_config('request.jwt.claim.email', 'pgtap-pcm@example.test', true);
+select set_config(
+  'request.jwt.claims',
+  '{"sub":"00000000-0000-0000-0000-000000000111","email":"pgtap-pcm@example.test","role":"authenticated"}',
+  true
+);
+
+select throws_ok(
   $$select public.pcm_log_followup('00000000-0000-0000-0000-000000000113', current_date, 'invalid', null)$$,
   '22023',
   'invalid follow-up input',
@@ -233,6 +403,45 @@ select is(
   'failed side effect keeps member status unchanged'
 );
 
+set local role authenticated;
+select lives_ok(
+  $$select public.pcm_decide_approval('00000000-0000-0000-0000-000000000116', 'approved', null)$$,
+  'scoped approval decision succeeds'
+);
+
+reset role;
+select is(
+  (
+    select count(*)
+    from public.admin_audit_logs
+    where actor_id = '00000000-0000-0000-0000-000000000111'::uuid
+      and action = 'approve_request'
+      and entity_id = '00000000-0000-0000-0000-000000000116'
+  ),
+  1::bigint,
+  'successful approval RPC writes an audit row'
+);
+
+set local role authenticated;
+select throws_ok(
+  $$select public.pcm_decide_approval('00000000-0000-0000-0000-000000000124', 'approved', null)$$,
+  '22023',
+  'dropped status requires a reason',
+  'privileged-created legacy DROPPED payload without a reason is rejected'
+);
+
+reset role;
+select is(
+  (select status from public.approval_requests where id = '00000000-0000-0000-0000-000000000124'::uuid),
+  'pending',
+  'legacy DROPPED approval remains pending after validation failure'
+);
+select is(
+  (select journey_status from public.members where id = '00000000-0000-0000-0000-000000000113'::uuid),
+  'OGV',
+  'legacy DROPPED validation failure leaves member status unchanged'
+);
+
 alter table public.admin_audit_logs
   add constraint pcm_test_reject_approval_audit
   check (action <> 'approve_request') not valid;
@@ -252,7 +461,7 @@ select is(
 );
 select is(
   (select journey_status from public.members where id = '00000000-0000-0000-0000-000000000113'::uuid),
-  'FTV',
+  'OGV',
   'forced audit failure rolls back member status'
 );
 
