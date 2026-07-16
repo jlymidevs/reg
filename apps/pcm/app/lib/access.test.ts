@@ -1,19 +1,35 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { describe, expect, it } from "vitest";
-import { resolveMemberScope } from "./member-scope";
+import { describe, expect, it } from 'vitest';
+import { resolveMemberScope } from './member-scope';
 
-describe("resolveMemberScope", () => {
-  it("limits PCM staff to their assignments", () => {
-    expect(resolveMemberScope({ role: "pcm_staff", userId: "pcm-1" })).toEqual({ assignedPcmId: "pcm-1" });
+const migrationsDirectory = fileURLToPath(new URL('../../../../supabase/migrations/', import.meta.url));
+
+function readMigration(suffix: string) {
+  const filename = readdirSync(migrationsDirectory).find((name) => name.endsWith(`_${suffix}.sql`));
+  if (!filename) throw new Error(`Missing migration ending in _${suffix}.sql`);
+  return readFileSync(`${migrationsDirectory}${filename}`, 'utf8');
+}
+
+function functionBody(sql: string, functionName: string) {
+  const match = sql.match(
+    new RegExp(`create or replace function public\\.${functionName}\\([\\s\\S]*?as \\\$\\$([\\s\\S]*?)\\$\\$;`, 'i')
+  );
+  if (!match) throw new Error(`Missing ${functionName} function body`);
+  return match[1];
+}
+
+describe('resolveMemberScope', () => {
+  it('limits PCM staff to their assignments', () => {
+    expect(resolveMemberScope({ role: 'pcm_staff', userId: 'pcm-1' })).toEqual({ assignedPcmId: 'pcm-1' });
   });
 
-  it("gives administrators church-wide scope", () => {
-    expect(resolveMemberScope({ role: "super_admin", userId: "admin-1" })).toEqual({});
+  it('gives administrators church-wide scope', () => {
+    expect(resolveMemberScope({ role: 'super_admin', userId: 'admin-1' })).toEqual({});
   });
 
-  it("keeps members on their own member record", () => {
-    expect(resolveMemberScope({ role: "member", userId: "member-1", memberId: "m-1" })).toEqual({ memberId: "m-1" });
+  it('keeps members on their own member record', () => {
+    expect(resolveMemberScope({ role: 'member', userId: 'member-1', memberId: 'm-1' })).toEqual({ memberId: 'm-1' });
   });
 });
 
@@ -28,6 +44,66 @@ describe('PCM member access migration', () => {
     expect(migration).toMatch(/if public\.is_pcm_for_member\(target_member_id\) then/);
     expect(migration.indexOf('public.is_network_head_for_member')).toBeGreaterThan(
       migration.indexOf('public.is_pcm_for_member')
+    );
+  });
+
+  it('denies an email-matched PCM assignment without an active pcm_staff role', () => {
+    const migration = readMigration('pcm_audit_log_and_scoped_rls');
+    const helper = functionBody(migration, 'is_pcm_for_member');
+
+    expect(helper).toMatch(/public\.has_role\('pcm_staff'\)\s+and\s+exists/i);
+    expect(helper).toMatch(/s\.status\s*=\s*'active'/i);
+    expect(helper).toMatch(/lower\(s\.email\)\s*=\s*public\.auth_email\(\)/i);
+  });
+
+  it('scopes approval, member-scoped, and follow-up policies to can_access_member', () => {
+    const migration = readMigration('pcm_audit_log_and_scoped_rls');
+
+    expect(migration).toMatch(/approval_requests_select[\s\S]*?using\s*\(public\.is_admin\(\) or public\.can_access_member\(member_id\)\)/i);
+    expect(migration).toMatch(/approval_requests_insert[\s\S]*?with check\s*\(public\.is_admin\(\) or public\.can_access_member\(member_id\)\)/i);
+    expect(migration).toMatch(/approval_requests_update[\s\S]*?using\s*\(public\.is_admin\(\) or public\.can_access_member\(member_id\)\)[\s\S]*?with check\s*\(public\.is_admin\(\) or public\.can_access_member\(member_id\)\)/i);
+    expect(migration).toMatch(/member_ministries[\s\S]*?follow_up_logs/i);
+    expect(migration).toMatch(/using \(public\.can_access_member\(member_id\)\)[\s\S]*?with check \(public\.can_access_member\(member_id\)\)/i);
+  });
+
+  it('creates admin audit logs with admin-only reads and no browser writes', () => {
+    const migration = readMigration('pcm_audit_log_and_scoped_rls');
+
+    expect(migration).toMatch(/create table if not exists public\.admin_audit_logs/i);
+    expect(migration).toMatch(/created_at\s+timestamptz\s+not null default now\(\)/i);
+    expect(migration).toMatch(/alter table public\.admin_audit_logs enable row level security/i);
+    expect(migration).toMatch(/revoke all on table public\.admin_audit_logs from public, anon, authenticated/i);
+    expect(migration).toMatch(/create policy admin_audit_logs_admin_read[\s\S]*?public\.is_admin\(\)/i);
+  });
+});
+
+describe('PCM atomic care migration', () => {
+  it('uses authenticated, role-gated, non-leaking RPCs', () => {
+    const migration = readMigration('pcm_atomic_care_actions');
+
+    for (const functionName of ['pcm_log_followup', 'pcm_request_status_change', 'pcm_decide_approval']) {
+      const body = functionBody(migration, functionName);
+      expect(body).toMatch(/v_actor_id uuid := auth\.uid\(\);[\s\S]*?if v_actor_id is null/i);
+      expect(body).toMatch(/public\.can_access_member\(/i);
+      expect(body).toMatch(/insert into public\.admin_audit_logs/i);
+      expect(body).not.toMatch(/exception\s+when/i);
+    }
+
+    expect(migration).toMatch(/security definer\s+set search_path = ''/i);
+    expect(migration).toMatch(/revoke all on function public\.pcm_decide_approval\(uuid, text, text\) from public, anon/i);
+    expect(migration).toMatch(/grant execute on function public\.pcm_decide_approval\(uuid, text, text\) to authenticated/i);
+  });
+
+  it('orders approved side effects, decision, and audit so any failure rolls back', () => {
+    const migration = readMigration('pcm_atomic_care_actions');
+    const decision = functionBody(migration, 'pcm_decide_approval');
+
+    expect(decision).toMatch(/raise exception 'approval side effect failed'/i);
+    expect(decision.indexOf('update public.approval_requests')).toBeGreaterThan(
+      decision.indexOf("if p_decision = 'approved' then")
+    );
+    expect(decision.indexOf('insert into public.admin_audit_logs')).toBeGreaterThan(
+      decision.indexOf('update public.approval_requests')
     );
   });
 });
