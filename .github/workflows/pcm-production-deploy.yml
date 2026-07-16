@@ -65,10 +65,10 @@ jobs:
           test -n "$VERCEL_TOKEN"
           corepack enable
           pnpm install --frozen-lockfile
-          pnpm exec vercel link --yes --scope "$VERCEL_ORG_ID" --project "$VERCEL_PROJECT_ID" --token "$VERCEL_TOKEN"
-          pnpm exec vercel pull --yes --environment=production --token "$VERCEL_TOKEN"
-          pnpm exec vercel build --prod --token "$VERCEL_TOKEN"
-          pnpm exec vercel deploy --prebuilt --prod --token "$VERCEL_TOKEN"
+          pnpm dlx vercel@55.0.0 link --yes --scope "$VERCEL_ORG_ID" --project "$VERCEL_PROJECT_ID" --token "$VERCEL_TOKEN"
+          pnpm dlx vercel@55.0.0 pull --yes --environment=production --token "$VERCEL_TOKEN"
+          pnpm dlx vercel@55.0.0 build --prod --token "$VERCEL_TOKEN"
+          pnpm dlx vercel@55.0.0 deploy --prebuilt --prod --token "$VERCEL_TOKEN"
 
       - name: Verify production response
         run: |
