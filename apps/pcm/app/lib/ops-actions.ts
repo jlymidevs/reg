@@ -15,6 +15,7 @@ const APPROVER_ROLES: RoleCode[] = ['pcm_staff', 'network_head', 'ministry_head'
 const FOLLOWUP_ROLES: RoleCode[] = ['pcm_staff', 'admin', 'super_admin'];
 const FOLLOWUP_METHODS = ['call', 'text', 'visit', 'prayer', 'online', 'other'] as const;
 const PIPELINE_STATUSES = ['FTV', 'OGV', 'RM', 'AM', 'DROPPED'] as const;
+const MEMBER_ACTION_ERROR = 'Unable to process this member action.';
 
 function hasAnyRole(roles: RoleCode[], allowed: RoleCode[]) {
   return roles.some((role) => allowed.includes(role));
@@ -30,7 +31,34 @@ async function requireOperator(allowed: RoleCode[]) {
   const roles = await getMyRoles(supabase);
   if (!hasAnyRole(roles, allowed)) return { ok: false as const, error: 'Not authorized.' };
 
-  return { ok: true as const, user, roles };
+  return { ok: true as const, user, roles, supabase };
+}
+
+async function canAccessMember(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  roles: RoleCode[],
+  memberId: string
+) {
+  if (!memberId) return false;
+  if (roles.includes('admin') || roles.includes('super_admin')) return true;
+
+  // Authenticated query applies RLS and can_access_member scope checks before service-role writes.
+  const { data, error } = await supabase.from('members').select('id').eq('id', memberId).maybeSingle();
+  return !error && !!data;
+}
+
+async function auditCareWrite(event: Parameters<typeof logAudit>[0], savedAction: string): Promise<ActionResult | null> {
+  try {
+    await logAudit(event);
+    return null;
+  } catch (error) {
+    console.error('Audit logging failed after committed care write:', error);
+    // Supabase JS requests are not transactionally coupled; surface this so staff trigger manual audit review.
+    return {
+      ok: false,
+      error: `${savedAction} was saved, but audit logging failed. Contact an administrator for review.`,
+    };
+  }
 }
 
 async function resolvePcmStaffId(email?: string | null) {
@@ -169,6 +197,9 @@ export async function decideApproval(formData: FormData): Promise<ActionResult> 
     .maybeSingle();
 
   if (!request) return { ok: false, error: 'Approval request not found.' };
+  if (!request.member_id || !(await canAccessMember(auth.supabase, auth.roles, request.member_id))) {
+    return { ok: false, error: MEMBER_ACTION_ERROR };
+  }
   if (request.status !== 'pending') return { ok: false, error: 'This request was already decided.' };
 
   if (decision === 'approved') {
@@ -196,23 +227,22 @@ export async function decideApproval(formData: FormData): Promise<ActionResult> 
 
   if (error) return { ok: false, error: 'Unable to save approval decision.' };
 
-  try {
-    await logAudit({
+  const auditFailure = await auditCareWrite(
+    {
       actorId: auth.user.id,
       action: decision === 'approved' ? 'approve_request' : 'reject_request',
       entityType: 'approval_requests',
       entityId: id,
       before: { status: request.status },
       after: { status: decision, note },
-    });
-  } catch (err) {
-    console.error("Audit logging failed:", err);
-  }
+    },
+    'Approval decision'
+  );
 
   revalidatePath('/journey-approvals');
   revalidatePath('/');
   revalidatePath(path);
-  return { ok: true };
+  return auditFailure ?? { ok: true };
 }
 
 export async function logFollowup(formData: FormData): Promise<ActionResult> {
@@ -229,6 +259,9 @@ export async function logFollowup(formData: FormData): Promise<ActionResult> {
   if (!FOLLOWUP_METHODS.includes(method as (typeof FOLLOWUP_METHODS)[number])) {
     return { ok: false, error: 'Invalid follow-up method.' };
   }
+  if (!(await canAccessMember(auth.supabase, auth.roles, memberId))) {
+    return { ok: false, error: MEMBER_ACTION_ERROR };
+  }
 
   const loggedBy = await resolvePcmStaffId(auth.user.email);
   const admin = createAdminClient();
@@ -242,23 +275,22 @@ export async function logFollowup(formData: FormData): Promise<ActionResult> {
 
   if (error) return { ok: false, error: 'Unable to log follow-up.' };
 
-  try {
-    await logAudit({
+  const auditFailure = await auditCareWrite(
+    {
       actorId: auth.user.id,
       action: 'log_followup',
       entityType: 'members',
       entityId: memberId,
       after: { method, date, notes },
-    });
-  } catch (err) {
-    console.error("Audit logging failed:", err);
-  }
+    },
+    'Follow-up'
+  );
 
   revalidatePath('/');
   revalidatePath('/followups');
   revalidatePath('/watchlist');
   revalidatePath(path);
-  return { ok: true };
+  return auditFailure ?? { ok: true };
 }
 
 export async function requestStatusChange(formData: FormData): Promise<ActionResult> {
@@ -278,8 +310,12 @@ export async function requestStatusChange(formData: FormData): Promise<ActionRes
   }
 
   const admin = createAdminClient();
-  const { data: member } = await admin.from('members').select('journey_status').eq('id', memberId).maybeSingle();
-  if (!member || member.journey_status === to) return { ok: false, error: 'Member or move not found.' };
+  const { data: member } = await admin.from('members').select('id,journey_status').eq('id', memberId).maybeSingle();
+  if (!member) return { ok: false, error: 'Member or move not found.' };
+  if (!(await canAccessMember(auth.supabase, auth.roles, member.id))) {
+    return { ok: false, error: MEMBER_ACTION_ERROR };
+  }
+  if (member.journey_status === to) return { ok: false, error: 'Member or move not found.' };
 
   const { error } = await admin.from('approval_requests').insert({
     request_type: 'member_status_change',
@@ -289,22 +325,21 @@ export async function requestStatusChange(formData: FormData): Promise<ActionRes
   });
   if (error) return { ok: false, error: 'Unable to submit pipeline move.' };
 
-  try {
-    await logAudit({
+  const auditFailure = await auditCareWrite(
+    {
       actorId: auth.user.id,
       action: 'request_status_change',
       entityType: 'members',
       entityId: memberId,
       before: { journey_status: member.journey_status },
       after: { journey_status: to, reason },
-    });
-  } catch (err) {
-    console.error("Audit logging failed:", err);
-  }
+    },
+    'Pipeline move request'
+  );
 
   revalidatePath(path);
   revalidatePath('/journey-approvals');
-  return { ok: true };
+  return auditFailure ?? { ok: true };
 }
 
 export async function submitApprovalDecision(formData: FormData): Promise<void> {
