@@ -137,6 +137,31 @@ create table if not exists public.admin_audit_logs (
   created_at timestamptz not null default now()
 );
 
+-- Production already has a legacy audit table. Extend it without dropping history.
+alter table public.admin_audit_logs
+  add column if not exists actor_id uuid;
+alter table public.admin_audit_logs
+  add column if not exists entity_type text;
+alter table public.admin_audit_logs
+  add column if not exists entity_id text;
+alter table public.admin_audit_logs
+  add column if not exists before jsonb;
+alter table public.admin_audit_logs
+  add column if not exists after jsonb;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.admin_audit_logs'::regclass
+      and conname = 'admin_audit_logs_actor_id_fkey'
+  ) then
+    alter table public.admin_audit_logs
+      add constraint admin_audit_logs_actor_id_fkey
+      foreign key (actor_id) references auth.users(id) on delete restrict;
+  end if;
+end $$;
+
 create index if not exists admin_audit_logs_actor_created_at_idx
   on public.admin_audit_logs (actor_id, created_at desc);
 
