@@ -66,7 +66,7 @@ export async function saveAnnouncement(formData: FormData): Promise<SaveResult> 
 
   if (error || !announcementId) return { ok: false, error: 'Unable to save the announcement.' };
 
-  revalidatePath('/dashboard/announcements');
+  revalidatePath('/dashboard/communications');
   return { ok: true, announcementId };
 }
 
@@ -82,18 +82,18 @@ export async function archiveAnnouncement(formData: FormData): Promise<ArchiveRe
   });
   if (error) return { ok: false, error: 'Unable to archive the announcement.' };
 
-  revalidatePath('/dashboard/announcements');
+  revalidatePath('/dashboard/communications');
   return { ok: true };
 }
 
 export async function submitAnnouncement(formData: FormData): Promise<void> {
   const result = await saveAnnouncement(formData);
-  if (!result.ok) redirect(buildFlashPath('/dashboard/announcements', 'error', result.error));
-  redirect(buildFlashPath('/dashboard/announcements', 'success', 'Announcement saved.'));
+  if (!result.ok) redirect(buildFlashPath('/dashboard/communications', 'error', result.error));
+  redirect(buildFlashPath('/dashboard/communications', 'success', 'Announcement saved.'));
 }
 
 export async function submitArchiveAnnouncement(formData: FormData): Promise<void> {
   const result = await archiveAnnouncement(formData);
-  if (!result.ok) redirect(buildFlashPath('/dashboard/announcements', 'error', result.error));
-  redirect(buildFlashPath('/dashboard/announcements', 'success', 'Announcement archived.'));
+  if (!result.ok) redirect(buildFlashPath('/dashboard/communications', 'error', result.error));
+  redirect(buildFlashPath('/dashboard/communications', 'success', 'Announcement archived.'));
 }

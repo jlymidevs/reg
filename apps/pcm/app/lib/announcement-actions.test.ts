@@ -1,12 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
+vi.mock('next/navigation', () => ({ redirect: vi.fn() }));
 vi.mock('@jlycc/permissions', () => ({ getMyRoles: vi.fn() }));
 vi.mock('@jlycc/supabase/server', () => ({ createClient: vi.fn() }));
 
 import { getMyRoles } from '@jlycc/permissions';
 import { createClient } from '@jlycc/supabase/server';
-import { archiveAnnouncement, saveAnnouncement } from './announcement-actions';
+import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
+import { archiveAnnouncement, saveAnnouncement, submitAnnouncement, submitArchiveAnnouncement } from './announcement-actions';
 
 function formData(fields: Record<string, string>) {
   const data = new FormData();
@@ -57,6 +60,7 @@ describe('announcement actions', () => {
       p_target_role_code: null,
       p_publish: true,
     });
+    expect(revalidatePath).toHaveBeenCalledWith('/dashboard/communications');
   });
 
   it('archives through the authenticated RPC', async () => {
@@ -66,5 +70,19 @@ describe('announcement actions', () => {
     expect(rpc).toHaveBeenCalledWith('pcm_archive_announcement', {
       p_announcement_id: '00000000-0000-0000-0000-000000000301',
     });
+    expect(revalidatePath).toHaveBeenCalledWith('/dashboard/communications');
+  });
+
+  it('redirects announcement feedback to the canonical communications route', async () => {
+    await submitAnnouncement(formData({
+      audience: 'church',
+      title: 'Prayer night',
+      body: 'Join us this Friday.',
+      mode: 'publish',
+    }));
+    await submitArchiveAnnouncement(formData({ announcementId: '00000000-0000-0000-0000-000000000301' }));
+
+    expect(redirect).toHaveBeenCalledWith(expect.stringContaining('/dashboard/communications?flash=success'));
+    expect(redirect).not.toHaveBeenCalledWith(expect.stringContaining('/dashboard/announcements'));
   });
 });

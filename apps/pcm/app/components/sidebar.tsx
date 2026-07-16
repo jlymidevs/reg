@@ -12,7 +12,7 @@ const NAV = [
   { ...dashboardRoutes.journey, icon: ApprovalIcon },
   { ...dashboardRoutes.tasks, icon: FollowupIcon },
   { ...dashboardRoutes.meetings, icon: ReportIcon },
-  { href: '/dashboard/announcements', label: 'Announcements', icon: AnnouncementIcon },
+  { href: '/dashboard/communications', label: 'Announcements', icon: AnnouncementIcon },
   { href: '/dashboard/staff', label: 'Staff & Roles', icon: StaffIcon },
   { href: '/dashboard/turnover', label: 'Team Turnover', icon: TurnoverIcon },
   { href: '/dashboard/kra', label: 'KRA Dashboard', icon: KpiIcon },
