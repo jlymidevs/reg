@@ -21,6 +21,9 @@ const NAV = [
   { href: '/dashboard/audit', label: 'Audit Trail', icon: ReportIcon },
   { href: '/dashboard/settings', label: 'Settings', icon: KpiIcon },
   { href: '/dashboard/integration', label: 'Data Integration', icon: ReportIcon },
+  { href: '/dashboard/network', label: 'Network Dashboard', icon: MembersIcon },
+  { href: '/dashboard/ministry', label: 'Ministry Dashboard', icon: MembersIcon },
+  { href: '/dashboard/member', label: 'My D-Journey', icon: DashboardIcon },
 ];
 
 export function Sidebar() {
