@@ -107,3 +107,41 @@ describe('PCM atomic care migration', () => {
     );
   });
 });
+
+describe('PCM RPC-only care write migration', () => {
+  it('removes direct care mutations and scopes staff member updates', () => {
+    const migration = readMigration('pcm_rpc_only_care_writes');
+
+    for (const policy of [
+      'approval_requests_insert',
+      'approval_requests_update',
+      'member_journey_progress_insert',
+      'member_journey_progress_update',
+      'member_requirement_completions_insert',
+      'member_requirement_completions_update',
+      'follow_up_logs_insert',
+      'follow_up_logs_update',
+    ]) {
+      expect(migration).toMatch(new RegExp(`drop policy if exists ${policy} on public\\.`, 'i'));
+    }
+
+    expect(migration).toMatch(/revoke insert, update on table public\.approval_requests from public, anon, authenticated/i);
+    expect(migration).toMatch(/revoke insert, update on table public\.member_journey_progress from public, anon, authenticated/i);
+    expect(migration).toMatch(/revoke insert, update on table public\.member_requirement_completions from public, anon, authenticated/i);
+    expect(migration).toMatch(/revoke insert, update on table public\.follow_up_logs from public, anon, authenticated/i);
+    expect(migration).toMatch(/drop policy if exists members_staff_write on public\.members/i);
+    expect(migration).toMatch(/create policy members_scoped_staff_update[\s\S]*?public\.has_role\('pcm_staff'\)[\s\S]*?public\.has_role\('network_head'\)[\s\S]*?public\.has_role\('ministry_head'\)[\s\S]*?public\.can_access_member\(id\)[\s\S]*?with check/i);
+    expect(migration).toMatch(/create policy members_admin_update[\s\S]*?public\.is_admin\(\)[\s\S]*?with check \(public\.is_admin\(\)\)/i);
+  });
+
+  it('keeps pgTAP fixtures self-contained without disabling integrity checks', () => {
+    const test = readFileSync(
+      fileURLToPath(new URL('../../../../supabase/tests/database/pcm_care_write_hardening.test.sql', import.meta.url)),
+      'utf8'
+    );
+
+    expect(test).toMatch(/select plan\(17\);/i);
+    expect(test).toMatch(/insert into auth\.users/i);
+    expect(test).not.toMatch(/session_replication_role/i);
+  });
+});
