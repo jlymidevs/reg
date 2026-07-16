@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { createClient } from '@jlycc/supabase/server';
-import { loadDashboardSnapshot } from '../lib/pcm-data';
+import { DashboardSnapshotLoadError, loadDashboardSnapshot } from '../lib/pcm-data';
 import { requirePcmAccess } from '../lib/access';
 
 export const dynamic = 'force-dynamic';
@@ -93,7 +93,9 @@ export default async function DashboardPage() {
         </section>
       </div>
     );
-  } catch {
+  } catch (error) {
+    if (!(error instanceof DashboardSnapshotLoadError)) throw error;
+
     return (
       <section className="mx-auto max-w-[1120px] space-y-6">
         <header>

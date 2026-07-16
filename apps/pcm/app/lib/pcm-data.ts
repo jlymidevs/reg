@@ -94,6 +94,13 @@ export interface DashboardSnapshot {
   weeklyKpi: WeeklyKpiRow | null;
 }
 
+export class DashboardSnapshotLoadError extends Error {
+  constructor() {
+    super('Dashboard data could not be loaded.');
+    this.name = 'DashboardSnapshotLoadError';
+  }
+}
+
 function isAdminRole(roles: RoleCode[]) {
   return roles.includes('admin') || roles.includes('super_admin') || roles.includes('pcm_staff');
 }
@@ -120,7 +127,12 @@ export async function loadDashboardSnapshot(
 ): Promise<DashboardSnapshot> {
   const canSeeAll = isAdminRole(roles);
 
-  const [{ data: members }, { data: watchlist }, { data: approvals }, { data: weeklyRows }] =
+  const [
+    { data: members, error: membersError },
+    { data: watchlist, error: watchlistError },
+    { data: approvals, error: approvalsError },
+    { data: weeklyRows, error: weeklyKpiError },
+  ] =
     await Promise.all([
       supabase
         .from('member_dashboard_view')
@@ -148,7 +160,11 @@ export async function loadDashboardSnapshot(
           'pcm_staff_id,pcm_staff_name,week_start,week_end,followups_completed,members_assigned,ftv_to_ogv,ogv_to_rm,rm_to_am,attendance_this_week,inactive_recovered,heartlink_assignments,requirements_completed'
         )
         .order('week_start', { ascending: false }),
-    ]);
+      ]);
+
+  if (membersError ?? watchlistError ?? approvalsError ?? weeklyKpiError) {
+    throw new DashboardSnapshotLoadError();
+  }
 
   const kpiList = (weeklyRows ?? []) as WeeklyKpiRow[];
   const weeklyKpi =

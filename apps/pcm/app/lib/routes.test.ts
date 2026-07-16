@@ -33,6 +33,7 @@ describe("dashboard routes", () => {
       '/dashboard/djourney': '/dashboard/journey',
       '/followups': '/dashboard/tasks',
       '/members': '/dashboard/members',
+      '/reports/weekly': '/dashboard/meetings',
     };
 
     for (const route of canonicalRoutes) {
@@ -43,6 +44,8 @@ describe("dashboard routes", () => {
     for (const [route, target] of Object.entries(legacyRoutes)) {
       expect(readFileSync(pageForRoute(route), 'utf8')).toContain(`redirect('${target}')`);
     }
+
+    expect(readFileSync(pageForRoute('/dashboard/meetings'), 'utf8')).not.toContain('href="/reports/weekly"');
   });
 });
 
