@@ -99,3 +99,18 @@ export async function submitTurnover(formData: FormData): Promise<void> {
   if (!result.ok) redirect(buildFlashPath('/dashboard/turnover', 'error', result.error));
   redirect(buildFlashPath('/dashboard/turnover', 'success', 'Team turnover completed and audited.'));
 }
+
+export async function submitMemberLinkDecision(formData: FormData): Promise<void> {
+  const supabase = await createClient();
+  await requireAdminAccess(supabase);
+  const requestId = String(formData.get('requestId') ?? '').trim();
+  const decision = String(formData.get('decision') ?? '').trim();
+  const memberId = String(formData.get('memberId') ?? '').trim();
+  if (!requestId || !['approve', 'reject', 'needs_more_info'].includes(decision)) redirect(buildFlashPath('/dashboard/member-links', 'error', 'Invalid member link decision.'));
+  const result = decision === 'approve'
+    ? await supabase.rpc('approve_member_link', { p_request_id: requestId, p_selected_member_id: memberId, p_admin_notes: optional(formData, 'notes') })
+    : await supabase.rpc('update_member_link_status', { p_request_id: requestId, p_status: decision, p_reason: optional(formData, 'reason'), p_admin_notes: optional(formData, 'notes') });
+  if (result.error) redirect(buildFlashPath('/dashboard/member-links', 'error', 'Member link decision could not be saved.'));
+  revalidatePath('/dashboard/member-links');
+  redirect(buildFlashPath('/dashboard/member-links', 'success', 'Member link decision saved and audited.'));
+}
