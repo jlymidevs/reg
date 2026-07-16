@@ -1,0 +1,46 @@
+name: PCM Security
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  pcm-security:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: 2.109.1
+
+      - name: Verify Docker service
+        run: docker info
+
+      - name: Start local Supabase stack
+        run: supabase start
+
+      - name: Run PCM database security tests
+        run: pnpm test:db
+
+      - name: Run unit tests
+        run: pnpm test
+
+      - name: Run type checks
+        run: pnpm typecheck
