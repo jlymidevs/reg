@@ -16,6 +16,10 @@ const NAV = [
   { href: '/dashboard/staff', label: 'Staff & Roles', icon: StaffIcon },
   { href: '/dashboard/turnover', label: 'Team Turnover', icon: TurnoverIcon },
   { href: '/dashboard/kra', label: 'KRA Dashboard', icon: KpiIcon },
+  { href: '/dashboard/promotions', label: 'Role Promotions', icon: StaffIcon },
+  { href: '/dashboard/member-links', label: 'Member Links', icon: MembersIcon },
+  { href: '/dashboard/audit', label: 'Audit Trail', icon: ReportIcon },
+  { href: '/dashboard/settings', label: 'Settings', icon: KpiIcon },
 ];
 
 export function Sidebar() {
