@@ -7,7 +7,8 @@ export const dynamic = 'force-dynamic';
 export default async function KraPage() {
   const supabase = await createClient();
   await requirePcmAccess(supabase);
-  const { data } = await supabase.from('pcm_weekly_kpi_view').select('pcm_staff_name,followups_completed,members_assigned,ftv_to_ogv,ogv_to_rm,rm_to_am,attendance_this_week,heartlink_assignments,requirements_completed').order('week_start', { ascending: false }).limit(25);
+  const { data, error } = await supabase.from('pcm_weekly_kpi_view').select('pcm_staff_name,followups_completed,members_assigned,ftv_to_ogv,ogv_to_rm,rm_to_am,attendance_this_week,heartlink_assignments,requirements_completed').order('week_start', { ascending: false }).limit(25);
+  if (error) return <section className="space-y-6"><PageHeader title="KRA Dashboard" subtitle="PCM Follow-Up Reports & Conversion Metrics" /><p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">KRA data could not be loaded. Try again shortly.</p></section>;
   const rows = data ?? [];
   const total = rows.reduce((sum, row) => sum + Number(row.members_assigned ?? 0), 0);
   const followups = rows.reduce((sum, row) => sum + Number(row.followups_completed ?? 0), 0);

@@ -1,7 +1,7 @@
 // Domain types for JLYCC platform.
 // TODO: replace hand-written rows with `supabase gen types typescript` output.
 
-export type JourneyStatus = 'FTV' | 'OGV' | 'RM' | 'AM';
+export type JourneyStatus = 'FTV' | 'OGV' | 'RM' | 'AM' | 'DROPPED';
 
 export type RoleCode =
   | 'member'

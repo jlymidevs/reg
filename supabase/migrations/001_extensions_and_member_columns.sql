@@ -5,6 +5,76 @@
 create extension if not exists "pgcrypto";
 create extension if not exists "uuid-ossp";
 
+-- The migration chain must bootstrap a fresh database before extending members.
+create table if not exists public.members (
+  id uuid primary key default gen_random_uuid(),
+  first_name text,
+  surname text,
+  email text,
+  phone text,
+  birth_date date,
+  name text,
+  assigned_pcm uuid,
+  entry_date date,
+  number integer,
+  status text,
+  status_in_church text,
+  djourney text,
+  heartlink text,
+  ministry_involvement text,
+  water_baptism date,
+  transformation_weekend text,
+  membership_orientation text,
+  is_active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.pcm_staff (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  email text not null,
+  status text not null default 'active',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.member_field_history (
+  id uuid primary key default gen_random_uuid(),
+  member_id uuid not null references public.members(id) on delete cascade,
+  field text not null,
+  old_value text,
+  new_value text,
+  changed_by uuid references auth.users(id) on delete set null,
+  changed_at timestamptz not null default now()
+);
+
+create table if not exists public.admin_users (
+  id uuid primary key default gen_random_uuid(),
+  email text not null unique,
+  created_at timestamptz not null default now()
+);
+
+-- These tables are legacy sources referenced by later hardening/report migrations.
+-- Create only when absent; existing production tables are extended in place.
+create table if not exists public.offerings (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  giving_date date,
+  name text,
+  email text
+);
+
+create table if not exists public.follow_up_logs (
+  id uuid primary key default gen_random_uuid(),
+  member_id uuid references public.members(id) on delete cascade,
+  logged_by uuid references auth.users(id) on delete set null,
+  date date not null default current_date,
+  method text not null,
+  notes text,
+  created_at timestamptz not null default now()
+);
+
 -- ---------------------------------------------------------------------------
 -- members: new columns (all additive)
 -- ---------------------------------------------------------------------------

@@ -92,15 +92,15 @@ returns boolean language sql stable security definer set search_path = public as
   );
 $$;
 
-create or replace function public.can_access_member(p_member_id uuid)
+create or replace function public.can_access_member(target_member_id uuid)
 returns boolean language sql stable security definer set search_path = public as $$
-  select p_member_id = public.current_member_id()
+  select target_member_id = public.current_member_id()
       or public.is_admin()
       -- ASSUMPTION: pcm_staff role sees all members (needed for watchlist across whole church)
       or public.has_role('pcm_staff')
-      or public.is_pcm_for_member(p_member_id)
-      or public.is_network_head_for_member(p_member_id)
-      or public.is_ministry_head_for_member(p_member_id);
+      or public.is_pcm_for_member(target_member_id)
+      or public.is_network_head_for_member(target_member_id)
+      or public.is_ministry_head_for_member(target_member_id);
 $$;
 
 grant execute on function

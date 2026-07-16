@@ -31,7 +31,7 @@ export default function PipelineBoard({ members }: { members: PipelineMember[] }
     form.set('memberId', dragged.member_id);
     form.set('to', to);
     form.set('reason', reason);
-    form.set('path', '/pipeline');
+    form.set('path', '/dashboard/pipeline');
     startTransition(async () => {
       const result = await requestStatusChange(form);
       if (!result.ok) setError(result.error);

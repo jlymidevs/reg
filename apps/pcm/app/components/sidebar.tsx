@@ -3,18 +3,27 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { createClient } from '@jlycc/supabase/client';
+import { dashboardRoutes } from '../lib/routes';
 
 const NAV = [
-  { href: '/', label: 'Dashboard', icon: DashboardIcon },
-  { href: '/watchlist', label: 'Daily Pulse', icon: WatchlistIcon },
-  { href: '/pipeline', label: 'CRM Pipeline', icon: MembersIcon },
-  { href: '/dashboard/djourney', label: 'D-Journey', icon: ApprovalIcon },
-  { href: '/followups', label: 'Tasks & Follow-ups', icon: FollowupIcon },
-  { href: '/reports/weekly', label: 'Heartlink Reports', icon: ReportIcon },
-  { href: '/dashboard/announcements', label: 'Announcements', icon: AnnouncementIcon },
+  { ...dashboardRoutes.overview, icon: DashboardIcon },
+  { ...dashboardRoutes.pulse, icon: WatchlistIcon },
+  { ...dashboardRoutes.pipeline, icon: MembersIcon },
+  { ...dashboardRoutes.journey, icon: ApprovalIcon },
+  { ...dashboardRoutes.tasks, icon: FollowupIcon },
+  { ...dashboardRoutes.meetings, icon: ReportIcon },
+  { href: '/dashboard/communications', label: 'Announcements', icon: AnnouncementIcon },
   { href: '/dashboard/staff', label: 'Staff & Roles', icon: StaffIcon },
   { href: '/dashboard/turnover', label: 'Team Turnover', icon: TurnoverIcon },
   { href: '/dashboard/kra', label: 'KRA Dashboard', icon: KpiIcon },
+  { href: '/dashboard/promotions', label: 'Role Promotions', icon: StaffIcon },
+  { href: '/dashboard/member-links', label: 'Member Links', icon: MembersIcon },
+  { href: '/dashboard/audit', label: 'Audit Trail', icon: ReportIcon },
+  { href: '/dashboard/settings', label: 'Settings', icon: KpiIcon },
+  { href: '/dashboard/integration', label: 'Data Integration', icon: ReportIcon },
+  { href: '/dashboard/network', label: 'Network Dashboard', icon: MembersIcon },
+  { href: '/dashboard/ministry', label: 'Ministry Dashboard', icon: MembersIcon },
+  { href: '/dashboard/member', label: 'My D-Journey', icon: DashboardIcon },
 ];
 
 export function Sidebar() {
