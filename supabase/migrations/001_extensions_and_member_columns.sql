@@ -17,6 +17,26 @@ create table if not exists public.members (
   updated_at timestamptz not null default now()
 );
 
+-- These tables are legacy sources referenced by later hardening/report migrations.
+-- Create only when absent; existing production tables are extended in place.
+create table if not exists public.offerings (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  giving_date date,
+  name text,
+  email text
+);
+
+create table if not exists public.follow_up_logs (
+  id uuid primary key default gen_random_uuid(),
+  member_id uuid references public.members(id) on delete cascade,
+  logged_by uuid references auth.users(id) on delete set null,
+  date date not null default current_date,
+  method text not null,
+  notes text,
+  created_at timestamptz not null default now()
+);
+
 -- ---------------------------------------------------------------------------
 -- members: new columns (all additive)
 -- ---------------------------------------------------------------------------
