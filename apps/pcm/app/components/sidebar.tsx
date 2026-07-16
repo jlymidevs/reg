@@ -20,6 +20,7 @@ const NAV = [
   { href: '/dashboard/member-links', label: 'Member Links', icon: MembersIcon },
   { href: '/dashboard/audit', label: 'Audit Trail', icon: ReportIcon },
   { href: '/dashboard/settings', label: 'Settings', icon: KpiIcon },
+  { href: '/dashboard/integration', label: 'Data Integration', icon: ReportIcon },
 ];
 
 export function Sidebar() {
