@@ -5,6 +5,18 @@
 create extension if not exists "pgcrypto";
 create extension if not exists "uuid-ossp";
 
+-- The migration chain must bootstrap a fresh database before extending members.
+create table if not exists public.members (
+  id uuid primary key default gen_random_uuid(),
+  first_name text,
+  surname text,
+  email text,
+  phone text,
+  birth_date date,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 -- ---------------------------------------------------------------------------
 -- members: new columns (all additive)
 -- ---------------------------------------------------------------------------
