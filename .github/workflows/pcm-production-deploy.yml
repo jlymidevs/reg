@@ -67,9 +67,13 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm dlx vercel@55.0.0 link --yes --scope "$VERCEL_ORG_ID" --project "$VERCEL_PROJECT_ID" --token "$VERCEL_TOKEN"
           pnpm dlx vercel@55.0.0 pull --yes --environment=production --token "$VERCEL_TOKEN"
-          set -a
-          source .vercel/.env.production.local
-          set +a
+          NEXT_PUBLIC_SUPABASE_URL="$(sed -n 's/^NEXT_PUBLIC_SUPABASE_URL=//p' .vercel/.env.production.local | head -n 1)"
+          NEXT_PUBLIC_SUPABASE_ANON_KEY="$(sed -n 's/^NEXT_PUBLIC_SUPABASE_ANON_KEY=//p' .vercel/.env.production.local | head -n 1)"
+          NEXT_PUBLIC_SUPABASE_URL="${NEXT_PUBLIC_SUPABASE_URL#\"}"
+          NEXT_PUBLIC_SUPABASE_URL="${NEXT_PUBLIC_SUPABASE_URL%\"}"
+          NEXT_PUBLIC_SUPABASE_ANON_KEY="${NEXT_PUBLIC_SUPABASE_ANON_KEY#\"}"
+          NEXT_PUBLIC_SUPABASE_ANON_KEY="${NEXT_PUBLIC_SUPABASE_ANON_KEY%\"}"
+          export NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY
           test -n "$NEXT_PUBLIC_SUPABASE_URL"
           test -n "$NEXT_PUBLIC_SUPABASE_ANON_KEY"
           pnpm dlx vercel@55.0.0 build --prod --token "$VERCEL_TOKEN"
